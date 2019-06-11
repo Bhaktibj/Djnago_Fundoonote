@@ -12,23 +12,23 @@
 {# Django Home Link / Admin Link / Register Link#}
          <a class="navbar-brand" href="{% url 'home' %}">MyApp</a>
           <a class="navbar-link" href="{% url 'admin:index' %}">Admin</a>
-          <a class="navbar-link" href="{% url 'Users:register' %}">Register</a>
-         <a target="_blank" href="{% url 'api_docs' %}">API Docs</a>
+          <a class="navbar-link" href="{% url 'Users:register' %}">
+              <span class="glyphicon glyphicon-user"></span> Register</a>
+          <a target="_blank" href="{% url 'api_docs' %}">API Docs</a>
 
           {# Some logic on what to display for last item#}
           {% if user.is_authenticated %}
-            <p><a href="{% url 'logout' %}">Logout</a></p>
-
+            <a href="{% url 'logout' %}">Logout</a>
+            <a href="{% url 'enter' %}">Enter  </a>
           {% else %}
-            <a class="navbar-link" href="{% url 'Users:user_login' %}">Login</a>
+            <a class="navbar-link" href="{% url 'Users:user_login' %}">
+                <span class="glyphicon glyphicon-log-in"></span>  Login </a>
             <a class="navbar-link" href="{% url 'password_reset' %}">ResetPassword</a>
           {% endif %}
       </div>
     <div class="container">
     {% block body_block %}
     {% endblock %}
-
-
     </div>
     </body>
 </html>

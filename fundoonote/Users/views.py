@@ -1,5 +1,7 @@
+
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth import authenticate, login, logout
+from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -8,7 +10,6 @@ from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes, force_text
 from django.http import JsonResponse # import JsonResponse to use the display the all users in Json Format
 from django.contrib.auth.models import User
-from django.shortcuts import render
 
 from rest_framework.generics import CreateAPIView
 from rest_framework import viewsets # viewSet is collection of Users
@@ -17,8 +18,10 @@ from .tokens import account_activation_token # activate the users account
 from .serializers import UserSerializer # import the user serializer to serialize the User data
 from .redis import redis_methods  # import the redis_method class from redis file
 from .forms import UserForm
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import NotesForm , LabelsForm
 
+from .models import Notes , Labels
 try:
     import jwt
 except ImportError:
@@ -33,7 +36,7 @@ def home(request):
 """this method is used to enter the Users"""
 
 def enter(request):
-      return render(request, 'loginapp/index.html', {})
+      return render(request, 'Users/base.html', {})
 
 
 """only after login of user this method can be called"""
@@ -187,3 +190,84 @@ def get_users():
     users_list = list(users)
     return JsonResponse(users_list, safe=False)
 
+
+""" Curd Operation for Notes"""
+
+# create the note list
+def note_list(request, template_name='Users/note_list.html'):
+    notes = Notes.objects.all() # select the all notes
+    data = {}
+    data['object_list'] = notes  # stored in dictionaries
+    return render(request, template_name, data)
+
+# create the note
+def note_create(request, template_name='Users/note_form.html'):
+    form = NotesForm(request.POST or None)
+    if form.is_valid(): # check form is valid?
+        form.save()  # if valid save
+        return redirect('Users:note_list')
+    return render(request, template_name, {'form': form}) # render the view
+
+# update the notes
+def note_update(request, pk, template_name='Users/note_form.html'):
+    post = get_object_or_404(Notes, pk=pk)  # post the object
+    form = NotesForm(request.POST or None, instance=post)
+    if form.is_valid(): # check form is valid?
+        form.save() # if valid save
+        return redirect('Users:note_list') # redirect the note_list.html
+    return render(request, template_name, {'form': form})
+
+# delete the note
+def note_delete(request, pk, template_name='Users/note_delete.html'):
+    note = get_object_or_404(Notes, pk=pk)
+    if request.method=='POST': # if request is post
+        note.delete() # note is delete
+        return redirect('Users:note_list') # redirect the note list
+    return render(request, template_name, {'note': note})
+
+""" Curd Operation for Labels"""
+
+# list the labels
+def label_list(request, template_name='Users/labels_list.html'):
+    labels = Labels.objects.all() # take the all labels
+    data = {}
+    data['object_list'] = labels  # stored the labels in dictionaries
+    return render(request, template_name, data) # render the template
+
+# create Labels
+def label_create(request, template_name='Users/labels_form.html'):
+    form = LabelsForm(request.POST or None) # form request with post
+    if form.is_valid(): # check form is valid?
+        form.save() # if valid save form
+        return redirect('Users:labels_list') # redirect the form
+    return render(request, template_name, {'form': form})
+
+# Edit labels using Label_update
+def label_update(request, pk, template_name='Users/labels_form.html'):
+    post = get_object_or_404(Labels, pk=pk) # get the object or 404 error
+    form = LabelsForm(request.POST or None, instance=post) # send the request post
+    if form.is_valid(): # if form is valid?
+        form.save() # if valid then save
+        return redirect('Users:labels_list') # redirect the labels_list
+    return render(request, template_name, {'form': form})
+
+# delete labels using labels_delete view
+def label_delete(request, pk, template_name='Users/labels_delete.html'):
+    labels = get_object_or_404(Labels, pk=pk)#get the object or 404 error
+    if request.method=='POST': # if request method is post
+        labels.delete()  # delete labels
+        return redirect('Users:labels_list') # redirect the labels_list
+    return render(request, template_name, {'labels': labels})
+
+# view for Upload the images
+# def image_view(request):
+#     if request.method == 'POST':
+#         form = NotesForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('base')
+#     else:
+#         form = NotesForm()
+#     return render(request, 'Users/image.html', {
+#         'form': form
+#     })
