@@ -1,3 +1,6 @@
-# from django.contrib import admin
-# from .models import UserData
-# admin.site.register(UserData)
+from django.contrib import admin
+from .models import Notes, Labels
+
+admin.site.register(Notes)
+admin.site.register(Labels)
+

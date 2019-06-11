@@ -20,6 +20,8 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 MEDIA_DIR = os.path.join(BASE_DIR, 'media')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_ROOT =  os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 
 # Quick-start development settings - unsuitable for production
@@ -48,7 +50,8 @@ INSTALLED_APPS = [
     'django_extensions',  # this is used to create the UML Diagram
     'social_django',
     'rest_framework_swagger',
-    'storages',
+    'storages',# Aws used
+
 
 
 ]
@@ -63,7 +66,7 @@ REST_FRAMEWORK = {
 
 SOCIAL_AUTH_FACEBOOK_KEY = config('SOCIAL_AUTH_FACEBOOK_KEY')       # App ID
 SOCIAL_AUTH_FACEBOOK_SECRET = config('SOCIAL_AUTH_FACEBOOK_SECRET') # App Secret
-SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_link'] # add this
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_link'] #
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -102,6 +105,8 @@ WSGI_APPLICATION = 'fundoonote.wsgi.application'
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
+# Environment Variable
+
 env = environ.Env(
     SECRET_KEY=str,
     DEBUG=(bool, False),
@@ -119,9 +124,8 @@ CACHES = {
 """ Database setting using env variable """
 
 DATABASES = {
-  'default': env.db(),  # database settings
+    'default':env.db(),
 }
-
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
@@ -170,7 +174,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
 DEFAULT_FROM_EMAIL = 'TestSite Team <bhaktibj402@gmail.com>'
 
-
+""" Configuring the authentication classes """
 AUTHENTICATION_BACKENDS = [
         'social_core.backends.linkedin.LinkedinOAuth2',
         'social_core.backends.facebook.FacebookOAuth2',
@@ -178,15 +182,17 @@ AUTHENTICATION_BACKENDS = [
         'social_core.backends.github.GithubOAuth2',
 
 ]
+
+""" The LOGIN_REDIRECT_URL will be used to redirect the 
+user after authenticating from Django Login and Social Auth."""
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
 LOGIN_REDIRECT_URL = 'home'
 
-
+# LInkedIn Settings
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = config('SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY')         #Client ID
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = config('SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET') #Client Secret
 SOCIAL_AUTH_LINKEDIN_SCOPE = ['r_liteprofile', 'r_emailaddress','w_member_social']
-# Add the fields so they will be requested from linkedin.
 SOCIAL_AUTH_LINKEDIN_OAUTH2_FIELD_SELECTORS = ['email-address', 'formatted-name', 'public-profile-url', 'picture-url']
 SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
         ('id', 'id'),
@@ -196,12 +202,13 @@ SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
         ('publicProfileUrl', 'profile_url'),
     ]
 
+# Github settings
 SOCIAL_AUTH_GITHUB_KEY = config('SOCIAL_AUTH_GITHUB_KEY')
 SOCIAL_AUTH_GITHUB_SECRET = config('SOCIAL_AUTH_GITHUB_SECRET')
 
-SESSION_COOKIE_SECURE=False
+""" AWS S3 Settings"""
 
-AWS_STORAGE_BUCKET_NAME = 'django-s3-assets1'
+AWS_STORAGE_BUCKET_NAME = 'django-s3-assets1' # AWS Bucket Name
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',

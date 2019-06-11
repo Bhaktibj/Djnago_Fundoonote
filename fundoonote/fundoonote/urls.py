@@ -1,17 +1,18 @@
+from django.conf import settings
 from django.conf.urls import include, url
+from django.conf.urls.static import static
 from django.contrib import admin
 from rest_framework.schemas import get_schema_view
 from rest_framework_simplejwt import views as jwt_views
 from Users import views
 from rest_framework import routers
 from rest_framework_swagger.views import get_swagger_view
+from django.urls import path
 
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet) # register the view_set to display the all users
 schema_view = get_schema_view(title='Pastebin API')
-
-
 
 urlpatterns = [
     url('schema/', schema_view),
@@ -30,4 +31,9 @@ urlpatterns = [
     url('api-auth/',include('rest_framework.urls', namespace='rest_framework')),
     url('rest_login/', views.RestLogin.as_view(), name='rest_login'),
     url(r'^docs/$', get_swagger_view(title='API Docs'), name='api_docs'), # swagger
+    # url('image_upload', views.image_view, name = 'image_upload'),
+
 ]
+# if settings.DEBUG:
+#         urlpatterns += static(settings.MEDIA_URL,
+#                               document_root=settings.MEDIA_ROOT)

@@ -1,4 +1,3 @@
-from django.test import TestCase, Client, LiveServerTestCase
 
 from django.test import SimpleTestCase
 from django.urls import reverse
@@ -30,7 +29,7 @@ class HomePageTests(SimpleTestCase):   # test the Views
         self.assertEquals(response.status_code, 200) # 200 is status code is True
 
     def test_view_url_by_name(self):
-        response = self.client.get(reverse('index'))  # test the url by name.
+        response = self.client.get(reverse('home'))  # test the url by name.
         self.assertEquals(response.status_code, 200)
 
 class EnterPageTests(SimpleTestCase):
@@ -46,7 +45,7 @@ class EnterPageTests(SimpleTestCase):
     def test_view_uses_correct_template(self):   # check the test view which template is used
         response = self.client.get(reverse('enter'))
         self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'Users/index.html')
+        self.assertTemplateUsed(response, 'loginapp/index.html')
 
     def test_about_page_does_not_contain_incorrect_html(self): # test the contain of page is incorrect
         response = self.client.get('/')
