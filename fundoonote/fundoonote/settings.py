@@ -32,13 +32,13 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 TEMPLATE_DEBUG = DEBUG
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'Users',  # import the app module
+  # import the app module
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,17 +50,40 @@ INSTALLED_APPS = [
     'django_extensions',  # this is used to create the UML Diagram
     'social_django',
     'rest_framework_swagger',
-    'storages',# Aws used
-
-
-
+    'django_elasticsearch_dsl',
+    'Users',
+    'storages',
+    'django_filters',
+    # Aws used
 ]
+""" Celery Settings"""
+BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Nairobi'
+
+""" Elastic Search"""
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'localhost:9200'
+    },
+}
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
+    # "Authentication credentials were not provided."
+'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication', #Token Authentication
         'rest_framework_simplejwt.authentication.JWTAuthentication',# JWT Token
-    ],
+       'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
+
+
 
 
 
@@ -124,7 +147,7 @@ CACHES = {
 """ Database setting using env variable """
 
 DATABASES = {
-    'default':env.db(),
+    'default': env.db()
 }
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -207,7 +230,6 @@ SOCIAL_AUTH_GITHUB_KEY = config('SOCIAL_AUTH_GITHUB_KEY')
 SOCIAL_AUTH_GITHUB_SECRET = config('SOCIAL_AUTH_GITHUB_SECRET')
 
 """ AWS S3 Settings"""
-
 AWS_STORAGE_BUCKET_NAME = 'django-s3-assets1' # AWS Bucket Name
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_S3_OBJECT_PARAMETERS = {
