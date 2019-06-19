@@ -1,31 +1,35 @@
-
+from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth import authenticate, login, logout
-from django.core.files.storage import FileSystemStorage
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes, force_text
-from django.http import JsonResponse # import JsonResponse to use the display the all users in Json Format
 from django.contrib.auth.models import User
 
-from rest_framework.generics import CreateAPIView
-from rest_framework import viewsets # viewSet is collection of Users
-from rest_framework.response import Response # import the Rest_framework implementation
+from rest_framework.generics import CreateAPIView, ListCreateAPIView
+from rest_framework import viewsets, generics  # viewSet is collection of Users
 from .tokens import account_activation_token # activate the users account
 from .serializers import UserSerializer # import the user serializer to serialize the User data
 from .redis import redis_methods  # import the redis_method class from redis file
 from .forms import UserForm
-from django.shortcuts import render, redirect, get_object_or_404
-from .forms import NotesForm , LabelsForm
+from django.shortcuts import render
+from .documents import PostDocument
+from django.db.models import Q
 
-from .models import Notes , Labels
-try:
-    import jwt
-except ImportError:
-    print("import jwt")
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .models import Notes, Label
+from .serializers import NotesSerializer, LabelSerializer
+import pickle
+
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+import jwt
+
 
 r = redis_methods()
 """this method is used to display the home page"""
@@ -36,8 +40,10 @@ def home(request):
 """this method is used to enter the Users"""
 
 def enter(request):
-      return render(request, 'Users/base.html', {})
+      return render(request, 'loginapp/index.html', {})
 
+# def keep(request):
+#     return render(request, 'Users/base.html',{})
 
 """only after login of user this method can be called"""
 def user_logout(request):  # this method is used to logout
@@ -84,6 +90,7 @@ def register(request):      # this method is used to signup the user
 
 
 """this method is used to login the user"""
+@login_required
 def user_login(request):
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
@@ -145,7 +152,7 @@ class RestLogin(CreateAPIView):
         res = {"message": "something bad happened", # give the element what you want in rest api
                "data": {},
                "success": False,
-               "username":{}}
+               }
         try:
             username = request.data['username']
             if username is None:                   # if username is None
@@ -174,7 +181,6 @@ class RestLogin(CreateAPIView):
                     res['message'] = "Logged in Successfully"
                     res['data'] = token
                     res['success'] = True
-                    res['username'] = username
                     return Response(res)  # if active then return response with jWT Token
                 else:
                     return Response(res) # else user is not active
@@ -191,83 +197,188 @@ def get_users():
     return JsonResponse(users_list, safe=False)
 
 
-""" Curd Operation for Notes"""
+""" ****************************Curd Operation for Notes*************************** """
 
-# create the note list
-def note_list(request, template_name='Users/note_list.html'):
-    notes = Notes.objects.all() # select the all notes
-    data = {}
-    data['object_list'] = notes  # stored in dictionaries
-    return render(request, template_name, data)
+"""Create the Notes"""
+class CreateNotes(CreateAPIView):
+    serializer_class = NotesSerializer
 
-# create the note
-def note_create(request, template_name='Users/note_form.html'):
-    form = NotesForm(request.POST or None)
-    if form.is_valid(): # check form is valid?
-        form.save()  # if valid save
-        return redirect('Users:note_list')
-    return render(request, template_name, {'form': form}) # render the view
+"""Display the list of Notes"""
+class NotesList(APIView):
+    try:
+        def get(self,request):
+            notes = Notes.objects.all()
+            data = NotesSerializer(notes, many=True).data
+            return Response(data)
+    except Exception as e:
+        print("Invalid Function")
 
-# update the notes
-def note_update(request, pk, template_name='Users/note_form.html'):
-    post = get_object_or_404(Notes, pk=pk)  # post the object
-    form = NotesForm(request.POST or None, instance=post)
-    if form.is_valid(): # check form is valid?
-        form.save() # if valid save
-        return redirect('Users:note_list') # redirect the note_list.html
-    return render(request, template_name, {'form': form})
+""" Display the details of list"""
+class NotesDetail(APIView):
+    try:
+        def get(self, request, pk):
+            note = get_object_or_404(Notes, pk=pk)
+            data = NotesSerializer(note).data
+            dict = pickle.dumps(data)  # dump the file
+            r.set_token('mydict', dict) # stored the value into key
+            print("set data")
+            read_dict = r.get_token('mydict')  # read the value
+            data1 = pickle.loads(read_dict)  # loads data disk into data1
+            print(data1)
+            return Response(data)
+    except Exception as e:
+        print("Something is Happen")
 
-# delete the note
-def note_delete(request, pk, template_name='Users/note_delete.html'):
-    note = get_object_or_404(Notes, pk=pk)
-    if request.method=='POST': # if request is post
-        note.delete() # note is delete
-        return redirect('Users:note_list') # redirect the note list
-    return render(request, template_name, {'note': note})
+""" Delete the Node """
+class NotesDelete(APIView):
+    def get(self, request, pk):
+        note = Notes.objects.get(pk=pk)
+        print(pk)
+        try:
+            if note.deleted == True:  # if deleted field is true.
+                data = note.delete()  # if true then delete
+                print(data)
+            return Response("Delete the Item")
+        except Exception as e:
+            print(e)
 
-""" Curd Operation for Labels"""
+""" Trash the Note"""
+class TrashView(APIView):
+    try:
+        def get(self,request,pk):
+            note = Notes.objects.get(pk=pk)
+            try:
+                if note.trash == False and note.deleted == True:
+                    note.trash = True # if trash = false
+                    note.save()
+                return Response("Note is Trash")
+            except Exception as e:
+                print(e)
+    except Exception as e:
+        print(e)
 
-# list the labels
-def label_list(request, template_name='Users/labels_list.html'):
-    labels = Labels.objects.all() # take the all labels
-    data = {}
-    data['object_list'] = labels  # stored the labels in dictionaries
-    return render(request, template_name, data) # render the template
+""" Archive The Note"""
+class ArchiveNotes(APIView):
+    try:
+        def get(self,request,pk):
+            note = Notes.objects.get(pk=pk)
+            try:
+                if note.deleted == False and note.trash == False:
+                    if note.is_archive == False: # Check if trash is false or true
+                        note.is_archive = True # if false then set True
+                        note.save() # save the note
+                    else:
+                        return Response("Already archive")
+                return Response("Archive is set")
+            except Exception as e:
+                print(e)
+    except Exception as e:
+        print(e)
 
-# create Labels
-def label_create(request, template_name='Users/labels_form.html'):
-    form = LabelsForm(request.POST or None) # form request with post
-    if form.is_valid(): # check form is valid?
-        form.save() # if valid save form
-        return redirect('Users:labels_list') # redirect the form
-    return render(request, template_name, {'form': form})
+""" Archive The Note"""
+class ReminderNotes(APIView):
+    try:
+        def get(self,request,pk):
+            note = Notes.objects.get(pk=pk)
+            try:
+                if note.remainder == None: # Check reminder is set or not
+                    note.remainder =note.pub_date # if none then set pub_date
+                    note.save() # save the note
+                else:
+                    return Response("Already reminder is set") # if set
+                return Response("Reminder is set")
+            except Exception as e:
+                print(e)
+    except Exception as e:
+        print(e)
 
-# Edit labels using Label_update
-def label_update(request, pk, template_name='Users/labels_form.html'):
-    post = get_object_or_404(Labels, pk=pk) # get the object or 404 error
-    form = LabelsForm(request.POST or None, instance=post) # send the request post
-    if form.is_valid(): # if form is valid?
-        form.save() # if valid then save
-        return redirect('Users:labels_list') # redirect the labels_list
-    return render(request, template_name, {'form': form})
+""" Trash List """
+class TrashList(generics.ListAPIView):
+    queryset = Notes.objects.all()
+    serializer_class = NotesSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('trash',)
 
-# delete labels using labels_delete view
-def label_delete(request, pk, template_name='Users/labels_delete.html'):
-    labels = get_object_or_404(Labels, pk=pk)#get the object or 404 error
-    if request.method=='POST': # if request method is post
-        labels.delete()  # delete labels
-        return redirect('Users:labels_list') # redirect the labels_list
-    return render(request, template_name, {'labels': labels})
+""" Archive List"""
+class ArchiveList(generics.ListAPIView):
+    queryset = Notes.objects.all()
+    serializer_class = NotesSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('is_archive',)
 
-# view for Upload the images
-# def image_view(request):
-#     if request.method == 'POST':
-#         form = NotesForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('base')
-#     else:
-#         form = NotesForm()
-#     return render(request, 'Users/image.html', {
-#         'form': form
-#     })
+
+""" Create the Label View"""
+class CreateLabel(CreateAPIView):    # create label view using APIView
+    serializer_class = LabelSerializer
+
+""" Display the List of labels"""
+class LabelList(APIView): # display list of labels
+    def get(self,request):
+        label = Label.objects.all()[:20]
+        data = LabelSerializer(label, many=True).data
+        return Response(data)
+
+""" Display the detail of label """
+
+class LabelDetail(APIView):
+    try:
+        def get(self, request, pk):
+            label = get_object_or_404(Label, pk=pk)
+            data = LabelSerializer(label).data
+            """ Stored the data into redis cache"""
+            dict = pickle.dumps(data)
+            r.set_token('mydict', dict)
+            print("set data1")
+            read_dict = r.get_token('mydict')
+            data1 = pickle.loads(read_dict)
+            print(data1)
+            return JsonResponse(data) # response in json format
+    except Exception as e:
+        print(e)
+
+""" Delete Labels"""
+class LabelDelete(APIView):
+    def get(self, request, pk):
+        label = Label.objects.get(pk=pk)
+        label.delete()
+        return Response("Delete the Item")
+
+""" Pagination for Notes"""
+class CustomPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+    def get_paginated_response(self, data):
+        return Response({
+            'links': {
+                'next': self.get_next_link(),
+                'previous': self.get_previous_link()
+            },
+            'count': self.page.paginator.count,
+            'page_size': self.page_size,
+            'results': data
+        })
+
+class NotesListPage(ListCreateAPIView):
+    serializer_class = NotesSerializer
+    pagination_class = CustomPagination
+    queryset = Notes.objects.all()
+
+
+""" ElasticSearch"""
+def search(request):
+    queryset = Notes.objects.all() # select the all object
+    query = Q() # Q() objects make it possible to define and reuse conditions
+
+    for title, value in request.POST.items():
+        if value: # if field_name .
+            try:
+                PostDocument.get_field(title) # display the  fields value if it is match
+            except:
+                continue
+            lookup = "{}__icontains".format(title)
+            query |= Q(**{lookup: value})
+    queryset = queryset.filter(query)
+    return HttpResponse(queryset)
+

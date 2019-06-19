@@ -11,12 +11,13 @@
  <div class="navbar">
 <a href="{% url 'logout' %}">Logout</a>
 <a class="navbar-link" href="{% url 'password_reset' %}">ResetPassword</a>
- <a class="navbar-link" href="{% url 'keep' %}">GoogleKeep</a>
  </div>
 
 <br><br><br><br><h1 align="center"> Welcome {{ user.username }}<br>
     <i class="glyphicon glyphicon-thumbs-up" style="font-size:64px"></i>
-</h1>
+
+</h1><br><br>
+
 {% block content %}
 {% endblock %}
 </body>
