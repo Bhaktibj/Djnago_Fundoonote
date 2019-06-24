@@ -1,5 +1,5 @@
 from django.urls import reverse, resolve, Resolver404
-from loginapp.views import register
+from Users.views import register
 
 class TestUrls:
    def test_view_url_by_name(self):

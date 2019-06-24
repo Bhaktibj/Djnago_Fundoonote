@@ -10,12 +10,12 @@ r = redis.StrictRedis(host='localhost', port=6379, db=0)
 class redis_methods:
 
     """ this method is used to  add the data to redis"""
-    def set_token(self, key, value,):
+    def set_value(self, key, value,):
         r.set(key, value)
         print('token set')
     """this method is used to  get the data out of redis"""
 
-    def get_token(self, key):
+    def get_value(self, key):
         token = r.get(key)
         return token
 

@@ -2,22 +2,20 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-  <link rel="stylesheet" href="{% static 'loginapp/css/style.css' %}"/>
-
+    <link rel="stylesheet" href="{% static 'loginapp/css/style.css' %}"/>
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %} </title>
 </head>
 <body background="{% static "loginapp/images/image3.jpeg" %}" alt="My image">
- <div class="navbar">
+<div class="navbar">
 <a href="{% url 'logout' %}">Logout</a>
 <a class="navbar-link" href="{% url 'password_reset' %}">ResetPassword</a>
- </div>
+</div>
 
 <br><br><br><br><h1 align="center"> Welcome {{ user.username }}<br>
     <i class="glyphicon glyphicon-thumbs-up" style="font-size:64px"></i>
 
 </h1><br><br>
-
 {% block content %}
 {% endblock %}
 </body>
