@@ -10,7 +10,6 @@ from rest_framework import routers
 from rest_framework_swagger.views import get_swagger_view
 from django.urls import re_path, path
 
-
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet) # register the view_set to display the all users
 
@@ -32,4 +31,8 @@ urlpatterns = [
     url('api-auth/',include('rest_framework.urls', namespace='rest_framework')),
     url(r'^docs/$', get_swagger_view(title='API Docs'), name='api_docs'), # swagger
     path(r'api/', include_docs_urls(title='Notes API')), # CoreApi
+    path('accounts/', include('allauth.urls')),
+
 ]
+
+

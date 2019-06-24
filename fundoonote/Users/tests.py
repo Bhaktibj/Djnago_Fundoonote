@@ -1,5 +1,6 @@
 
 from django.test import SimpleTestCase
+from django.urls import reverse
 
 from .forms import *
 from django.test import TestCase
@@ -51,18 +52,3 @@ class EnterPageTests(SimpleTestCase):
         self.assertNotContains(
             response, 'Hi there! I should not be on the page.')
 
-from django.test import TestCase
-# from django.urls import reverse
-
-from .models import Label
-
-
-# class PostTests(TestCase):
-#
-#     def setUp(self):
-#         Label.objects.create(text='just a test')
-#
-#     def test_text_content(self):
-#         post = Label.objects.get(id=4)
-#         expected_object_name = f'{post.text}'
-#         self.assertEquals(expected_object_name, 'just a tes')

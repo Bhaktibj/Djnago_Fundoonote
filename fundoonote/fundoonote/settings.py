@@ -50,19 +50,29 @@ INSTALLED_APPS = [
     'django_extensions',  # this is used to create the UML Diagram
     'social_django',
     'rest_framework_swagger',
-    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl', # ElasticSearch DSL is a high level library which is use to writing the qu
     'Users',
     'storages',
-    'django_filters',
-    # Aws used
+    'django_filters', # django filters
+    'rest_auth.registration',
+    'rest_auth',  # rest_auth is used to reset password
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount', # social account
+    'django.contrib.sites',
+
 ]
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_REQUIRED = True
+SITE_ID = 1
+SITE_URL = "http://localhost:8000"
 """ Celery Settings"""
 BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Nairobi'
+CELERY_TIMEZONE = 'Asia/Shanghai'
 
 """ Elastic Search"""
 ELASTICSEARCH_DSL = {
@@ -82,9 +92,6 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
-
-
-
 
 
 SOCIAL_AUTH_FACEBOOK_KEY = config('SOCIAL_AUTH_FACEBOOK_KEY')       # App ID
