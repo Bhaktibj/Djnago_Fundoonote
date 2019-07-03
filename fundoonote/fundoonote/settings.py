@@ -48,31 +48,34 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'django_extensions',  # this is used to create the UML Diagram
-    'social_django',
+    'social_django', # social django library is used for social login
     'rest_framework_swagger',
     'django_elasticsearch_dsl', # ElasticSearch DSL is a high level library which is use to writing the qu
-    'Users',
+    'fundooapp', # app
     'storages',
     'django_filters', # django filters
-    'rest_auth.registration',
-    'rest_auth',  # rest_auth is used to reset password
+    'rest_auth.registration', # this is used for standard registration
+    'rest_auth',  # rest_auth is used to creating the API endpoints
     'allauth',
     'allauth.account',
-    'allauth.socialaccount', # social account
+    'allauth.socialaccount',
     'django.contrib.sites',
+    'django_celery_beat',
+
+
 
 ]
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_VERIFICATION = 'None'
 ACCOUNT_EMAIL_REQUIRED = True
-SITE_ID = 1
-SITE_URL = "http://localhost:8000"
+SITE_ID = 2
+
 """ Celery Settings"""
-BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Shanghai'
+# BROKER_URL = 'redis://localhost:6379'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+# CELERY_ACCEPT_CONTENT = ['application/json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = 'Asia/Shanghai'
 
 """ Elastic Search"""
 ELASTICSEARCH_DSL = {
@@ -106,6 +109,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'fundoonote.urls'
@@ -140,7 +144,7 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 env = environ.Env(
     SECRET_KEY=str,
     DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ['127.0.0.1:8000']),
+    # ALLOWED_HOSTS=(list, ['127.0.0.1:8000']),
     DATABASE_URL=str,
 )
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -243,10 +247,10 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 AWS_LOCATION = 'static'
-AWS_DEFAULT_ACL = None
+AWS_DEFAULT_ACL = 'private'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'Users/static'),
+    os.path.join(BASE_DIR, 'fundooapp/static'),
 ]
 STATIC_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
