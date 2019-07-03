@@ -54,16 +54,11 @@ INSTALLED_APPS = [
     'fundooapp', # app
     'storages',
     'django_filters', # django filters
-    'rest_auth.registration', # this is used for standard registration
     'rest_auth',  # rest_auth is used to creating the API endpoints
     'allauth',
     'allauth.account',
-    'allauth.socialaccount',
     'django.contrib.sites',
     'django_celery_beat',
-
-
-
 ]
 ACCOUNT_EMAIL_VERIFICATION = 'None'
 ACCOUNT_EMAIL_REQUIRED = True
@@ -114,7 +109,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'fundoonote.urls'
 
-
 TEMPLATES = [
         {
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -127,7 +121,6 @@ TEMPLATES = [
                     'django.contrib.auth.context_processors.auth',
                     'django.contrib.messages.context_processors.messages',
                     'social_django.context_processors.backends', # add this
-                    'social_django.context_processors.login_redirect', # add this
                 ],
             },
         },
