@@ -17,8 +17,7 @@ schema_view = get_schema_view(title='Pastebin API')
 
 urlpatterns = [
     url('schema/', schema_view),
-    re_path('', include('fundooapp.urls')), # include the all app urls in project urls
-    url(r'^logout/$', views.user_logout, name='logout'), # logout url
+    url('', include('fundooapp.urls')), # include the all app urls in project urls
     url(r'^register/$', views.register, name='register'),  # url for register
     url(r'^admin/', admin.site.urls), # admin login urls in rest Format
     url(r'^$', views.home, name='home'), # index url is call the template

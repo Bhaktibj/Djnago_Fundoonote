@@ -9,7 +9,7 @@ app_name = 'fundooapp'
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^register/$', views.register, name='register'), # url for register
-    url(r'^user_login/$', views.user_login, name='user_login'),
+    url(r'^user_login/$', views.user_login, {'template_name': 'fundooapp/login.html'},name='user_login'),
     url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
     views.activate, name='activate'),# url activate the user registration
     url('RestAPI/register/', views.RestUserRegister.as_view(), name='rest_register'),
@@ -43,7 +43,6 @@ urlpatterns = [
     url(r'^search/', views.search, name='search'),
     # Urls for Rest fundooapp
     path('RestUsers/', include('rest_auth.urls')),
-    path('RestUsers/registration/', include('rest_auth.registration.urls')),
     path('RestUsers/',ConfirmEmailView.as_view(),name="view"),
 
 ]
