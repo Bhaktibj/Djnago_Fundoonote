@@ -1,0 +1,32 @@
+{% load static %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'fundooapp/css/style.css' %}"/>
+
+{% block body_block %}
+
+<body background="{% static "fundooapp/images/b.jpg" %}" alt="My image">
+<div class="container">
+    <div class="jumbotron">
+
+        {% if registered %}
+        <h1>Thank you for registering!</h1>
+        {% else %}
+        <h1 style="color:black">Register Here</h1>
+        <hr style="color:black">
+        <div id="div1">
+            <form enctype="multipart/form-data" method="POST" style="color:Black">
+                {% csrf_token %}
+                {{ user_form.as_p }}
+                {{ profile_form.as_p }}
+                <input id="sub1" type="submit" name="" value="Register">
+            </form>
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+{% endblock %}

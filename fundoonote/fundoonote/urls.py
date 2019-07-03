@@ -5,7 +5,7 @@ from django.contrib import admin
 from rest_framework.documentation import include_docs_urls
 from rest_framework.schemas import get_schema_view
 from rest_framework_simplejwt import views as jwt_views
-from Users import views
+from fundooapp import views
 from rest_framework import routers
 from rest_framework_swagger.views import get_swagger_view
 from django.urls import re_path, path
@@ -17,7 +17,7 @@ schema_view = get_schema_view(title='Pastebin API')
 
 urlpatterns = [
     url('schema/', schema_view),
-    re_path('', include('Users.urls')), # include the all app urls in project urls
+    re_path('', include('fundooapp.urls')), # include the all app urls in project urls
     url(r'^logout/$', views.user_logout, name='logout'), # logout url
     url(r'^register/$', views.register, name='register'),  # url for register
     url(r'^admin/', admin.site.urls), # admin login urls in rest Format
