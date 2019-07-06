@@ -1,22 +1,18 @@
-{% extends 'loginapp/base.html' %}
 {% load staticfiles %}
-{% block title %} Sign in {% endblock %}
 {% block content %}
 <link rel="stylesheet" href="{% static 'fundooapp/css/style.css' %}"/>
-
 <body background="{% static "fundooapp/images/image3.jpeg" %}" alt="My image">
-<h1>Login Here</h1><hr>
-      <hr>
-<form method="post" action="{% url 'fundooapp:user_login' %}">
+<h1>Login Here</h1><hr><hr>
+<form method="POST" action="{% url 'fundooapp:login' %}">
        {% csrf_token %}
-          {# A more "HTML" way of creating the login form#}
-          <label for="username">Username:</label>
-          <input id="user" type="text" name="username" placeholder="Username" size="20px" align="center">
-    <br><br>
+       {# A more "HTML" way of creating the login form#}
+       <label for="username">Username:</label>
+       <input id="user" type="text" name="username" placeholder="Username" size="20px" align="center">
+      <br><br>
 <label for="password">Password:</label>
-          <input id="pwd" type="password" name="password" placeholder="Password" size="20px">
+    <input id="pwd" type="password" name="password" placeholder="Password" size="20px">
     <br><br>
-<input id="sub" type="submit" name="" value="Login" size="30px" height="10px" width="10px">
+   <input id="sub" type="submit" name="" value="Login" size="30px" height="10px" width="10px">
 </form>
 
 <hr><hr>

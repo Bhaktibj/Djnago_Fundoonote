@@ -1,0 +1,10 @@
+<form method="get">
+    <input id="q" name="q"  type="text" placeholder="Search your input">
+</form>
+{% for item in notes %}
+title: {{ item.title }}<br>
+id: {{ item.id }}<br>
+color: {{ item.color }}<br>
+image: {{ item.image }}<br>
+<br>
+{% endfor %}

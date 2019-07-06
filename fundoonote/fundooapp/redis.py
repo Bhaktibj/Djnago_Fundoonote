@@ -1,28 +1,5 @@
-# import boto3
+
 import redis
-# s3 = boto3.client('s3')  # Connection for S3
-# def upload_image(file, tag_file, valid_image):
-#     """This method is used to upload the images to Amazon s3 bucket"""
-#     try:
-#         if valid_image:  # If Image is Valid
-#             key = tag_file  # Assign the Key
-#             s3.upload_fileobj(file, 'django-s3-assets1', Key=key)  # Upload the image in a S3
-#             # print("Filesss", type(str(file)))
-#     except Exception as e:
-#         print(e)
-#
-#
-# def delete_from_s3(key):
-#     try:
-#         print('Keey', key)
-#         """This method is used to delete any object from s3 bucket """
-#         if key:  # If Key
-#             s3.delete_object(Bucket='django-s3-assets1', Key=key)  # Delete the image in a S3
-#     except Exception as e:
-#         print(e)
-
-
-
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 

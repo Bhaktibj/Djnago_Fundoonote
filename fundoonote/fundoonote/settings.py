@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'django_extensions',  # this is used to create the UML Diagram
     'social_django', # social django library is used for social login
     'rest_framework_swagger',
-    'django_elasticsearch_dsl', # ElasticSearch DSL is a high level library which is use to writing the qu
     'fundooapp', # app
     'storages',
     'django_filters', # django filters
@@ -59,6 +58,9 @@ INSTALLED_APPS = [
     'allauth.account',
     'django.contrib.sites',
     'django_celery_beat',
+    'django_elasticsearch_dsl',  # ElasticSearch DSL is a high level library which is use to writing the qu
+    'django_elasticsearch_dsl_drf',
+
 ]
 ACCOUNT_EMAIL_VERIFICATION = 'None'
 ACCOUNT_EMAIL_REQUIRED = True
@@ -79,14 +81,13 @@ ELASTICSEARCH_DSL = {
     },
 }
 REST_FRAMEWORK = {
-    # "Authentication credentials were not provided."
 'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication', #Token Authentication
         'rest_framework_simplejwt.authentication.JWTAuthentication',# JWT Token
-       'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }

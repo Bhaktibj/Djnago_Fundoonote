@@ -9,21 +9,18 @@
   <body background="{% static "fundooapp/images/image.jpg" %}" alt="My image">
     <div class="navbar">
 {# Django Home Link / Admin Link / Register Link#}
-         <a class="navbar-brand" href="{% url 'home' %}">MyApp</a>
+          <a class="navbar-brand" href="{% url 'home' %}">FundooApp</a>
           <a class="navbar-brand" href="{% url 'admin:index' %}">Admin</a>
-          <a class="navbar-brand" href="{% url 'fundooapp:register' %}">
-              <span class="glyphicon glyphicon-user"></span> Register</a>
           <a class="navbar-brand" href="{% url 'api_docs' %}">API Docs</a>
-
-
+          <a class="navbar-brand" href="{% url 'fundooapp:register' %}"><span class="glyphicon glyphicon-user"></span> Register</a>
+          <a class="navbar-brand" href="{% url 'password_reset' %}">ResetPassword</a>
           {# Some logic on what to display for last item#}
           {% if user.is_authenticated %}
             <a class="navbar-brand" href="{% url 'logout' %}">Logout</a>
             <a class="navbar-brand" href="{% url 'enter' %}">Enter  </a>
           {% else %}
-            <a class="navbar-brand" href="{% url 'fundooapp:user_login' %}">
+            <a class="navbar-brand" href="{% url 'fundooapp:login' %}">
                 <span class="glyphicon glyphicon-log-in"></span>  Login </a>
-            <a class="navbar-brand" href="{% url 'password_reset' %}">ResetPassword</a>
           {% endif %}
       </div>
     <div class="container">
@@ -31,4 +28,3 @@
     {% endblock %}
     </div>
 </body>
-</html>
