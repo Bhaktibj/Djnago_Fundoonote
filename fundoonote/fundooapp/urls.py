@@ -9,11 +9,9 @@ app_name = 'fundooapp'
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^register/$', views.register, name='register'), # url for register
-    url(r'^user_login/$', views.user_login, {'template_name': 'fundooapp/login.html'},name='user_login'),
+    url(r'user_login/', views.user_login, name='login'),
     url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
     views.activate, name='activate'),# url activate the user registration
-    url('RestAPI/register/', views.RestUserRegister.as_view(), name='rest_register'),
-    url('RestAPI/login/', views.RestLogin.as_view(), name='rest_login'),
 
     # list of Notes URL
     path("Notes/List/", views.NotesList.as_view(), name="note_list"),
@@ -33,17 +31,15 @@ urlpatterns = [
     path("Label/Delete/<int:pk>/", views.LabelDelete.as_view(), name='delete'),
     path("Label/Pagination/",views.LabelListPage.as_view(), name="label_page"),
     path("up/",views.upload_s3,name="upload"),
-    path("create/", views.create_aws_bucket, name='create'),
+    path("create/", views.create_aws_bucket.as_view(), name='create'),
     path("delete/", views.delete_aws_bucket, name='delete'),
     path("load/", views.aws_exist_bucket, name='delete'),
-
     # Urls for Search Filter
-    path("Search/user/", views.UserListView.as_view(), name="user"),
-    path("Search/notes/",views.NotesListView.as_view(), name="note"),
+    path("SearchFilter/user/", views.UserListView.as_view(), name="user"),
+    path("SearchFilter/notes/",views.NotesListView.as_view(), name="note"),
     url(r'^search/', views.search, name='search'),
     # Urls for Rest fundooapp
     path('RestUsers/', include('rest_auth.urls')),
-    path('RestUsers/',ConfirmEmailView.as_view(),name="view"),
-
+    path('RestUsers/',ConfirmEmailView.as_view(),name="view")
 ]
 

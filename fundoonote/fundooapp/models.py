@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 
 # Regex validators
+from django.utils.text import slugify
+
 validate_alphanumeric = RegexValidator(r'^[a-zA-Z0-9]*$', 'Only alphanumeric characters are allowed.')
 validate_alphabetical = RegexValidator('^[a-zA-Z]', 'Only Alphabetical Characters are allowed.')
 
@@ -22,16 +24,16 @@ class Notes(models.Model):
     is_archive = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
     COLOR_CHOICES = (
-        ('R','Red'),
-        ('G','Green'),
-        ('B','Blue'),
+        ('Red','Red'),
+        ('Ged','Green'),
+        ('Blue','Blue'),
     )
     color = models.CharField(default='Green', max_length=50, blank=True,choices=COLOR_CHOICES, null=True)
     image = models.ImageField(default=None, null=True)
     trash = models.BooleanField(default=False)
 
     def __str__(self):
-        return '"%s" by %s' % (self.title, self.created_by)
+        return self.title
 
 """ Label Models"""
 class Label(models.Model):
@@ -41,4 +43,10 @@ class Label(models.Model):
     def __str__(self): # print string Format
         return  self.text
 
+""" AWS Models"""
+class AWSModel(models.Model):
+    bucket_name = models.CharField(max_length=100)
+    region = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.bucket_name

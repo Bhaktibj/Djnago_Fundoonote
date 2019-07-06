@@ -1,34 +1,43 @@
 import imghdr
 
+from django.conf.locale import es
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404
 from django.urls import reverse
 from django.template.loader import render_to_string
+from django.utils.decorators import method_decorator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes, force_text
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
+from django_elasticsearch_dsl_drf.constants import LOOKUP_FILTER_RANGE, LOOKUP_QUERY_IN, LOOKUP_QUERY_GT, \
+    LOOKUP_QUERY_GTE, LOOKUP_QUERY_LT, LOOKUP_QUERY_LTE, SUGGESTER_TERM, SUGGESTER_PHRASE, SUGGESTER_COMPLETION, \
+    FUNCTIONAL_SUGGESTER_COMPLETION_PREFIX
+from django_elasticsearch_dsl_drf.filter_backends import FilteringFilterBackend, OrderingFilterBackend, \
+    DefaultOrderingFilterBackend, SearchFilterBackend, CompoundSearchFilterBackend, FunctionalSuggesterFilterBackend, \
+    SuggesterFilterBackend
+from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 from rest_framework.generics import CreateAPIView, ListCreateAPIView
 from rest_framework import viewsets, generics
 
 from .tokens import account_activation_token # activate the users account
-from .serializers import UserSerializer, RegisterSerializer
+from .serializers import UserSerializer, RegisterSerializer, AWSModelSerializer, NotesDocumentSerializer
 from .redis import redis_methods # import the redis_method class from redis file
 from .forms import UserForm
 from django.shortcuts import render
-from .documents import PostDocument
+from .documents import NotesDocument
 from django.db.models import Q
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Notes, Label
+from .models import Notes, Label, AWSModel
 from .serializers import NotesSerializer, LabelSerializer
 import pickle
 
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 import jwt
@@ -38,7 +47,7 @@ from .service import BotoService
 import os
 import boto3
 from boto3.s3.transfer import S3Transfer
-
+from .decorators import app_login_required
 
 
 r = redis_methods()
@@ -53,14 +62,10 @@ def home(request):
 def enter(request):
     return render(request, 'fundooapp/index.html', {})
 
-def link(request):
-    return render(request,'fundooapp/link_form.html')
-
 """only after login of user this method can be called"""
 def user_logout(request):  # this method is used to logout
     logout(request)
     return HttpResponseRedirect(reverse('home')) # after logout user reverse the index
-
 
 
 """this method is used to signup the user"""
@@ -101,10 +106,12 @@ def register(request):      # this method is used to signup the user
 
 
 """this method is used to login the user"""
-@login_required
 @csrf_exempt
 def user_login(request):
     # if this is a POST request we need to process the form data
+    res = {"message": "something bad happened",
+           "data": {},
+           "success": False}
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -112,8 +119,17 @@ def user_login(request):
         user = authenticate(username=username, password=password)
         if user:
             if user.is_active:
+                payload = {'username': username, 'password': password}
+                jwt_token = {
+                    'token': jwt.encode(payload, "Cypher", algorithm='HS256').decode('utf-8')
+                }
+                print(jwt_token)  # print JWT Token
+                """ JWT token stored in cache"""
+                token = jwt_token[ 'token' ]
+                print(token)
                 login(request, user)
-                return render(request, 'fundooapp/index.html', {})
+                print(user.username)
+                return render(request, 'fundooapp/index.html', {},res)
             else:
                 return HttpResponse("Your account was inactive.")
         else:
@@ -121,7 +137,7 @@ def user_login(request):
             print("They used username: {} and password: {}".format(username, password))
             return HttpResponse("Invalid login details given")
     else:
-        return render(request, 'fundooapp/login.html', {})
+        return render(request, 'fundooapp/user_login.html', {})
 
 
 """this method is used to generate confirmation mail to the user"""
@@ -154,6 +170,7 @@ class UserViewSet(viewsets.ModelViewSet):
 print(UserViewSet.__doc__)
 
 """ This method is used to display all users list"""
+@method_decorator(app_login_required, name='dispatch')
 def get_users():
     users = User.objects.all().values().order_by('-date_joined')  # or simply .values() to get all fields
     users_list = list(users)
@@ -163,6 +180,7 @@ def get_users():
 #**********************************Curd Operation for Notes*************************** """
 
 """Create the Notes"""
+# @method_decorator(app_login_required, name='dispatch')
 class CreateNotes(CreateAPIView):
     serializer_class = NotesSerializer
 
@@ -264,6 +282,7 @@ class CreateLabel(CreateAPIView):    # create label view using APIView
 class LabelList(APIView): # display list of all labels
     def get(self,request):
         try:
+
             label = Label.objects.all()
             data = LabelSerializer(label, many=True).data
             """ Stored the data into redis cache"""
@@ -400,8 +419,7 @@ class RestUserRegister(CreateAPIView):
 this class is used for login the rest and create the JWT Token 
  and store the token in redis cache
 """
-
-class RestLogin(CreateAPIView):
+class RestLogin(APIView):
     # account and create the JWT token
     serializer_class = UserSerializer
     def post(self, request, *args, **kwargs):
@@ -445,70 +463,35 @@ class RestLogin(CreateAPIView):
         except:
             return Response(res) # print response as is
 
-#**********************************Implementation of Search Filter***********************
-
-""" Trash List using django filter backend """
-class TrashList(generics.ListAPIView):
-    queryset = Notes.objects.all() # select all the object
-    serializer_class = NotesSerializer # serializer
-    filter_backends = (DjangoFilterBackend,) # set the django filter
-    filter_fields = ('trash',)
-
-""" Archive List using django filter backend"""
-class ArchiveList(generics.ListAPIView): # use teh ListApi view
-    queryset = Notes.objects.all()  # select all objects
-    serializer_class = NotesSerializer # serializer class
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('is_archive',) # set the filter which you want filter
-
-""" Display the notes by User"""
-
-class UserListView(generics.ListAPIView):
-    queryset = User.objects.all() # select all object
-    serializer_class = UserSerializer # user serializer
-    filter_backends = (filters.SearchFilter,) # use the backend filter
-    search_fields = ('username',)  # search user detail by using username field
-
-class NotesListView(generics.ListAPIView):
-    queryset = Notes.objects.all()
-    serializer_class = NotesSerializer # define the serializer_class
-    filter_backends = (filters.SearchFilter,) # use the backend filter
-    search_fields = ('title',) # search the note detail by using title field
-
-# ***********************************ElasticSearch****************************************
-def search(request):
-    queryset = Notes.objects.all() # select the all object
-    query = Q() # Q() objects make it possible to define and reuse conditions
-
-    for title, value in request.POST.items():
-        if value: # if field_name .
-            try:
-                PostDocument.get_field(title) # display the  fields value if it is match
-            except:
-                continue
-            lookup = "{}__icontains".format(title)
-            query |= Q(**{lookup: value})
-    queryset = queryset.filter(query)
-    return HttpResponse(queryset)
 
 # ***************************************S3 AWS Implementation***************************
-def create_aws_bucket(request):
+class create_aws_bucket(CreateAPIView):
     """Exercise create_bucket() method"""
+    serializer_class = AWSModelSerializer
     # Assign these values before running the program
-    bucket_name_in_specified_region = 'django-s3-assets4'
-    region = 'ap-south-1'
-    # Set up logging
-    logging.basicConfig(level=logging.DEBUG,
+    def post(self, request, *args, **kwargs):
+        res = {"message": "something bad happened",
+                "success": False}
+
+        bucket_name = request.data['bucket_name']  # getting the username
+        region = request.data['region']
+        aws = AWSModel.objects.create(bucket_name=bucket_name, region=region)
+        aws.save()
+        logging.basicConfig(level=logging.DEBUG,
                         format='%(levelname)s: %(asctime)s: %(message)s')
     # Create a bucket in a specified region
-    if boto.create_bucket(bucket_name_in_specified_region, region):
-        logging.info(f'Created bucket {bucket_name_in_specified_region} '
+        if boto.create_bucket(bucket_name=bucket_name, region=region):
+            logging.info(f'Created bucket {bucket_name} '
                     f'in region {region}')
-    return HttpResponse("AWS Bucket is Created")
+            res[ 'message' ] = "Bucket Is Created Successfully...Please activate your Account",
+            res[ 'success' ] = True,
+        return Response(res)
+
 #***************************************Delete Buckets********************************
 def delete_aws_bucket(request):
+    """ Delete bucket using boto3"""
     # Assign this value before running the program
-    test_bucket_name = 'django-s3-assets3'
+    test_bucket_name = 'django-s3-assets4'
     # Set up logging
     logging.basicConfig(level=logging.DEBUG,
                         format='%(levelname)s: %(asctime)s: %(message)s')
@@ -518,6 +501,7 @@ def delete_aws_bucket(request):
     return HttpResponse("Bucket is deleted")
 
 #**************************************S3 Upload files*******************************
+""" This method is used to upload the pic"""
 def upload_s3(request):
     try:
         # local directory path
@@ -539,6 +523,7 @@ def upload_s3(request):
         return HttpResponse("Invalid data")
 
 #**************************************** Check bucket is exist*************************************
+""" Bucket is exist or not"""
 def aws_exist_bucket(request):
     # Assign this value before running the program
     test_bucket_name = 'django-s3-assets2'
@@ -552,3 +537,103 @@ def aws_exist_bucket(request):
         logging.info(f'{test_bucket_name} does not exist or '
                      f'you do not have permission to access it.')
     return HttpResponse("Bucket is Exist")
+
+#**************************************ElasticSearch Implementation ******************
+class NotesDocumentViewSet(DocumentViewSet):
+    document = NotesDocument
+    serializer_class = NotesDocumentSerializer
+
+    filter_backends = [
+        FilteringFilterBackend,
+        OrderingFilterBackend,
+        DefaultOrderingFilterBackend,
+        CompoundSearchFilterBackend,
+        FunctionalSuggesterFilterBackend
+    ]
+
+    # Define search fields
+    pagination_class = LimitOffsetPagination
+
+    search_fields = (
+    'title',
+    'description',
+    'color',
+    'remainder',
+    )
+
+# Filter fields
+    filter_fields = {
+        'id':{
+        'field': 'id',
+        'lookups': [
+        LOOKUP_FILTER_RANGE,
+        LOOKUP_QUERY_IN,
+        LOOKUP_QUERY_GT,
+        LOOKUP_QUERY_GTE,
+        LOOKUP_QUERY_LT,
+        LOOKUP_QUERY_LTE,
+    ],
+    },
+        'title': 'title.raw',
+        'description': 'description.raw',
+        'color':'color.raw',
+        'remainder':'remainder.raw',
+    }
+
+# Define ordering fields
+    ordering_fields = {
+    'title': 'title.raw',
+    'description': 'description.raw',
+        'color':'color.raw',
+        'remainder':'remainder.raw',
+
+    }
+
+    functional_suggester_fields = {
+        'title':'title.raw',
+        'description':'description.raw',
+        'color': 'color.raw',
+        'remainder': 'remainder.raw',
+    }
+
+#**********************************Implementation of Search Filter***********************
+
+""" Trash List using django filter backend """
+class TrashList(generics.ListAPIView):
+    queryset = Notes.objects.all() # select all the object
+    serializer_class = NotesSerializer # serializer
+    filter_backends = (DjangoFilterBackend,) # set the django filter
+    filter_fields = ('trash',)
+
+""" Archive List using django filter backend"""
+class ArchiveList(generics.ListAPIView): # use teh ListApi view
+    queryset = Notes.objects.all()  # select all objects
+    serializer_class = NotesSerializer # serializer class
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('is_archive',) # set the filter which you want filter
+
+""" Display the notes by User"""
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all() # select all object
+    serializer_class = UserSerializer # user serializer
+    filter_backends = (filters.SearchFilter,) # use the backend filter
+    search_fields = ('username','id')  # search user detail by using username field
+
+class NotesListView(generics.ListAPIView):
+    queryset = Notes.objects.all()
+    serializer_class = NotesSerializer # define the serializer_class
+    filter_backends = (filters.SearchFilter,) # use the backend filter
+    search_fields = ('title','id') # search the note detail by using title field
+
+# *********************************** Search Operations using Form****************************************
+def search(request):
+    """ Search the note using form"""
+    q = request.GET.get('q', None)
+    notes = ''
+    if q is None or q is "":
+        notes = Notes.objects.all()
+    elif q is not None:
+        notes = Notes.objects.filter(Q(title__icontains=q) | Q(id__icontains=q) | Q(color__icontains=q))
+    return render(request, 'fundooapp/search.html', {'notes': notes})
+
+
