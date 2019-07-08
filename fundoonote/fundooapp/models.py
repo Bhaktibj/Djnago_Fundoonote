@@ -1,10 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
-
 # Regex validators
-from django.utils.text import slugify
-
 validate_alphanumeric = RegexValidator(r'^[a-zA-Z0-9]*$', 'Only alphanumeric characters are allowed.')
 validate_alphabetical = RegexValidator('^[a-zA-Z]', 'Only Alphabetical Characters are allowed.')
 
@@ -45,7 +42,7 @@ class Label(models.Model):
 
 """ AWS Models"""
 class AWSModel(models.Model):
-    bucket_name = models.CharField(max_length=100)
+    bucket_name = models.CharField(max_length=100, unique=True)
     region = models.CharField(max_length=100)
 
     def __str__(self):

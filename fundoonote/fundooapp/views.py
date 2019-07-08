@@ -1,5 +1,4 @@
 import imghdr
-
 from django.conf.locale import es
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
@@ -42,7 +41,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 import jwt
 import logging
-import boto3
 from .service import BotoService
 import os
 import boto3
@@ -209,13 +207,15 @@ class NotesDetail(APIView):
             return Response(data)
         except:
             return Response("Note Does Not Exist")
+    def put(self, request, pk):
+        try:
+            note= get_object_or_404(Notes,pk=pk)
+            data = NotesSerializer(note).data
+            data.save()
+            return Response("Updated")
+        except:
+            return Response("Except")
 
-def update_notes(notes_id, title,trash, deleted): # rename the title
-    note = Notes.objects.get(id=notes_id)
-    note.title=title # take title field
-    note.trash=trash
-    note.deleted=deleted
-    note.save()
 """ Delete the Node """
 class NotesDelete(APIView):
     def delete(self, request, pk):
@@ -275,6 +275,7 @@ class ReminderNotes(APIView):
 # *****************************Curd Operations on label**********************************"""
 
 """ Create the Label View"""
+# this method is takes the post method
 class CreateLabel(CreateAPIView):    # create label view using APIView
     serializer_class = LabelSerializer
 
@@ -369,49 +370,51 @@ class RestUserRegister(CreateAPIView):
         res = {"message": "something bad happened",
                 "data": {},
                 "success": False}
-
-        username = request.data['username']  # getting the username
-        email = request.data['email']   # getting the email id
-        password = request.data['password']     # getting the password
-        if username and email and password is not "":   # condition
-            user = User.objects.create_user(username=username, email=email, password=password)
-            user.is_active = False
-            user.save()
-                #current_site = get_current_site(request)
-            message = render_to_string('fundooapp/acc_active_email.html', {
-                'user': user,
-                'domain': '127.0.0.1:8000',
-                # takes user id and generates the base64 code(uidb64)
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
-                # Here we receive uidb64, token. By using the "urlsafe_base64_decode"
-                # we decode the base64 encoded uidb64 user id.
-                # We query the database with user id to get user
-                'token': account_activation_token.make_token(user),
-                # takes the user object and generates the onetime usable token for the user(token)
-            })
-            mail_subject = 'Activate your account...'
-            to_email = email
-            send_email = EmailMessage(mail_subject, message, to=[to_email])
-            send_email.send()
-            if send_email:
-                    payload = {'username': username, 'password': password,'email':email}
-                    jwt_token = {
-                        'token': jwt.encode(payload, "Cypher", algorithm='HS256').decode('utf-8')
-                    }
-                    print(jwt_token)  # print JWT Token
-                    """ JWT token stored in cache"""
-                    token = jwt_token[ 'token' ]
-                    r.set_value("p3", token)  # set the token in redis cache
-                    token_val = r.get_value("p3")  # get the value of token from cache
-                    print("Display The Tokens using get_token()")
-                    print(token_val)  # print the cache token
-                    print("Display the length of Token")
-                    len_str = r.length_str("p3")
-                    print(len_str)  # returns the length of token
-                    res['message'] = "Register Successfully...Please activate your Account",
-                    res[ 'data' ] = token,
-                    res[ 'success' ] = True,
-            return Response(res) # if try block is True return the response
+        try:
+            username = request.data['username']  # getting the username
+            email = request.data['email']   # getting the email id
+            password = request.data['password']     # getting the password
+            if username and email and password is not "":   # condition
+                user = User.objects.create_user(username=username, email=email, password=password)
+                user.is_active = False
+                user.save()
+                    #current_site = get_current_site(request)
+                message = render_to_string('fundooapp/acc_active_email.html', {
+                    'user': user,
+                    'domain': '127.0.0.1:8000',
+                    # takes user id and generates the base64 code(uidb64)
+                    'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
+                    # Here we receive uidb64, token. By using the "urlsafe_base64_decode"
+                    # we decode the base64 encoded uidb64 user id.
+                    # We query the database with user id to get user
+                    'token': account_activation_token.make_token(user),
+                    # takes the user object and generates the onetime usable token for the user(token)
+                })
+                mail_subject = 'Activate your account...'
+                to_email = email
+                send_email = EmailMessage(mail_subject, message, to=[to_email])
+                send_email.send()
+                if send_email:
+                        payload = {'username': username, 'password': password,'email':email}
+                        jwt_token = {
+                            'token': jwt.encode(payload, "Cypher", algorithm='HS256').decode('utf-8')
+                        }
+                        print(jwt_token)  # print JWT Token
+                        """ JWT token stored in cache"""
+                        token = jwt_token[ 'token' ]
+                        r.set_value("p3", token)  # set the token in redis cache
+                        token_val = r.get_value("p3")  # get the value of token from cache
+                        print("Display The Tokens using get_token()")
+                        print(token_val)  # print the cache token
+                        print("Display the length of Token")
+                        len_str = r.length_str("p3")
+                        print(len_str)  # returns the length of token
+                        res['message'] = "Register Successfully...Please activate your Account",
+                        res[ 'data' ] = token,
+                        res[ 'success' ] = True,
+                return Response(res) # if try block is True return the response
+        except:
+            return Response(res)
 
 
 #***********************************Rest Login for User***********************************
@@ -472,33 +475,55 @@ class create_aws_bucket(CreateAPIView):
     def post(self, request, *args, **kwargs):
         res = {"message": "something bad happened",
                 "success": False}
-
         bucket_name = request.data['bucket_name']  # getting the username
         region = request.data['region']
-        aws = AWSModel.objects.create(bucket_name=bucket_name, region=region)
-        aws.save()
-        logging.basicConfig(level=logging.DEBUG,
-                        format='%(levelname)s: %(asctime)s: %(message)s')
-    # Create a bucket in a specified region
-        if boto.create_bucket(bucket_name=bucket_name, region=region):
-            logging.info(f'Created bucket {bucket_name} '
-                    f'in region {region}')
-            res[ 'message' ] = "Bucket Is Created Successfully...Please activate your Account",
-            res[ 'success' ] = True,
-        return Response(res)
+        if boto.bucket_exists(bucket_name):
+            return Response("Bucket is already exist")
+        else:
+            aws = AWSModel.objects.create(bucket_name=bucket_name, region=region)
+            aws.save()
+            logging.basicConfig(level=logging.DEBUG,
+                            format='%(levelname)s: %(asctime)s: %(message)s')
+        # Create a bucket in a specified region
+            if boto.create_bucket(bucket_name=bucket_name, region=region):
+                logging.info(f'Created bucket {bucket_name} '
+                        f'in region {region}')
+                res[ 'message' ] = "Bucket Is Created Successfully...",
+                res[ 'success' ] = True,
+            return Response(res)
 
 #***************************************Delete Buckets********************************
-def delete_aws_bucket(request):
+class delete_aws_bucket(APIView):
     """ Delete bucket using boto3"""
+    def delete(self, request, pk):
+        res = {"message": "something bad happened",
+               "success": False}
+        try:
+            bucket = AWSModel.objects.get(pk=pk) # check pk value
+            bucket.delete()  # call delete function
     # Assign this value before running the program
-    test_bucket_name = 'django-s3-assets4'
     # Set up logging
-    logging.basicConfig(level=logging.DEBUG,
+            logging.basicConfig(level=logging.DEBUG,
                         format='%(levelname)s: %(asctime)s: %(message)s')
-    # Delete the bucket
-    if boto.delete_bucket(test_bucket_name):
-        logging.info(f'{test_bucket_name} was deleted')
-    return HttpResponse("Bucket is deleted")
+            # Delete the bucket
+            if boto.delete_bucket(bucket.bucket_name):
+                logging.info(f'{bucket.bucket_name} was deleted')
+                res[ 'message' ] = "Bucket Is Deleted Successfully",
+                res[ 'success' ] = True,
+            return Response(res)
+        except:
+            return Response(" Bucket Already deleted")
+
+#**********************************List of the Buckets*****************************
+class Bucket_List(APIView): # display list of all labels
+    def get(self,request):
+        try:
+            bucket = AWSModel.objects.all() # select the object
+            data = AWSModelSerializer(bucket, many=True).data
+            return Response(data) # return Response
+        except:
+            return Response("invalid or empty")
+
 
 #**************************************S3 Upload files*******************************
 """ This method is used to upload the pic"""
@@ -508,7 +533,7 @@ def upload_s3(request):
         local_directory = '/home/shadowk/PycharmProjects/Programs_BridgeLab/FundooProject/fundoonote/fundooapp/media'
         # boto3 service
         transfer = S3Transfer(boto3.client('s3'))
-        bucket = 'django-s3-assets1' # S3 existing bucket
+        bucket = 'django-s3-assets2' # S3 existing bucket
         for root, dirs, files in os.walk(local_directory): # local directory
             for filename in files:
                 local_path = os.path.join(root, 'image3.jpeg')
@@ -538,14 +563,31 @@ def aws_exist_bucket(request):
                      f'you do not have permission to access it.')
     return HttpResponse("Bucket is Exist")
 
+def upload_profile(request):
+    """ this method is used to call the uploadto_aws method from s3_transfer  to upload pic in s3 bucket """
+    res={}
+    try:
+        uploaded_file = request.FILES.get('document')  # GETTING THE FILE FROM LOCAL DISK
+        print("Upload Image", uploaded_file)
+        var = imghdr.what(uploaded_file)
+        print("Image", var)
+        if var==None:
+            return HttpResponse("file must be jpeg or png")
+        else:
+            return boto.uploadto_aws(request, uploaded_file)  # RETURNING THE FILE FROM LOCAL DISK TO S3 METHOD
+    except ( AttributeError, ValueError):
+        res={"empty file cant be uploaded"}
+        return HttpResponse("empty file cant be uploaded")
+
 #**************************************ElasticSearch Implementation ******************
 class NotesDocumentViewSet(DocumentViewSet):
-    document = NotesDocument
-    serializer_class = NotesDocumentSerializer
+    """ Search the Notes using ElasticSearch"""
+    document = NotesDocument # documents
+    serializer_class = NotesDocumentSerializer # serializer class
 
     filter_backends = [
-        FilteringFilterBackend,
-        OrderingFilterBackend,
+        FilteringFilterBackend, # backend filter
+        OrderingFilterBackend,   # ordering filter based on title
         DefaultOrderingFilterBackend,
         CompoundSearchFilterBackend,
         FunctionalSuggesterFilterBackend
@@ -553,7 +595,7 @@ class NotesDocumentViewSet(DocumentViewSet):
 
     # Define search fields
     pagination_class = LimitOffsetPagination
-
+    # search fields : title, description, color, remainder
     search_fields = (
     'title',
     'description',
@@ -588,7 +630,7 @@ class NotesDocumentViewSet(DocumentViewSet):
         'remainder':'remainder.raw',
 
     }
-
+  # suggests filter
     functional_suggester_fields = {
         'title':'title.raw',
         'description':'description.raw',
@@ -631,7 +673,7 @@ def search(request):
     q = request.GET.get('q', None)
     notes = ''
     if q is None or q is "":
-        notes = Notes.objects.all()
+        notes = Notes.objects.all() # select the all objects
     elif q is not None:
         notes = Notes.objects.filter(Q(title__icontains=q) | Q(id__icontains=q) | Q(color__icontains=q))
     return render(request, 'fundooapp/search.html', {'notes': notes})
