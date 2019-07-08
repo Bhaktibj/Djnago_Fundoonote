@@ -1,7 +1,6 @@
 from django.contrib.auth.models import User
 from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
 from rest_framework import serializers  # import the serializer
-from peewee import *
 from .models import Notes, Label, UserProfile, AWSModel
 from .documents import NotesDocument
 """ User Serializer"""
@@ -28,7 +27,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.RegexField(regex=r'^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$',
                                    required=True)
     password = serializers.CharField(style={'input_type': 'password'})
-
     class Meta:
         model = UserProfile
         fields = ('username', 'email', 'password')  # fields of username,email and password
@@ -43,25 +41,11 @@ class NotesDocumentSerializer(DocumentSerializer):
         fields = ('id', 'title', 'description', 'color','remainder')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class AWSModelSerializer(serializers.ModelSerializer):
     bucket_name = serializers.CharField(max_length=30)
     region = serializers.CharField(max_length=100)
 
     class Meta:
         model= AWSModel
-        fields = ('bucket_name','region')
+        fields = ('id','bucket_name','region')
 

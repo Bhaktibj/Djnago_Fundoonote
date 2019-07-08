@@ -1,13 +1,9 @@
 from __future__ import absolute_import, unicode_literals
-
-
 from .models import Notes, Label
-
 from celery import shared_task
 
-
 @shared_task
-def count_notes():               # count the number of notes
+def count_notes():         # count the number of notes
     return Notes.objects.count()
 
 @shared_task

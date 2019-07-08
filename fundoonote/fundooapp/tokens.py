@@ -13,5 +13,4 @@ class TokenGenerator(PasswordResetTokenGenerator): # password Generator is exten
                 six.text_type(user.is_active)
         )
 
-
 account_activation_token = TokenGenerator() # that will be send by email

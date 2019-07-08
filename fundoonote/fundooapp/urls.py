@@ -30,16 +30,16 @@ urlpatterns = [
     path("Label/Create/", views.CreateLabel.as_view(), name="label"),
     path("Label/Delete/<int:pk>/", views.LabelDelete.as_view(), name='delete'),
     path("Label/Pagination/",views.LabelListPage.as_view(), name="label_page"),
-    path("up/",views.upload_s3,name="upload"),
-    path("create/", views.create_aws_bucket.as_view(), name='create'),
-    path("delete/", views.delete_aws_bucket, name='delete'),
-    path("load/", views.aws_exist_bucket, name='delete'),
-    # Urls for Search Filter
+    path("upload/",views.upload_s3,name="upload"),
+    path("AWS_Bucket/create/", views.create_aws_bucket.as_view(), name='create'),
+    path("AWS_Bucket/delete/<int:pk>/", views.delete_aws_bucket.as_view(), name='delete'),
+    path("AWS_Bucket/List/", views.Bucket_List.as_view(), name="b1_list"),
     path("SearchFilter/user/", views.UserListView.as_view(), name="user"),
     path("SearchFilter/notes/",views.NotesListView.as_view(), name="note"),
     url(r'^search/', views.search, name='search'),
     # Urls for Rest fundooapp
     path('RestUsers/', include('rest_auth.urls')),
-    path('RestUsers/',ConfirmEmailView.as_view(),name="view")
+    path('RestUsers/',ConfirmEmailView.as_view(),name="view"),
+    path('upload_profile/',views.upload_profile, name='up')
 ]
 
