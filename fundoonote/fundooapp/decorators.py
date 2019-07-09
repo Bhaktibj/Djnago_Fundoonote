@@ -4,7 +4,6 @@ import jwt
 def app_login_required(function):
     def wrap(request, *args, **kwargs):
         res = {}
-
         try:
             token = request.META.get('HTTP_AUTHORIZATION')
             # token = red.get(red, 'token')

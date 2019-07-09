@@ -1,4 +1,6 @@
 import imghdr
+
+from boto3.s3.inject import upload_file
 from django.conf.locale import es
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
@@ -11,6 +13,7 @@ from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes, force_text
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import UpdateView
 from django_elasticsearch_dsl_drf.constants import LOOKUP_FILTER_RANGE, LOOKUP_QUERY_IN, LOOKUP_QUERY_GT, \
     LOOKUP_QUERY_GTE, LOOKUP_QUERY_LT, LOOKUP_QUERY_LTE, SUGGESTER_TERM, SUGGESTER_PHRASE, SUGGESTER_COMPLETION, \
     FUNCTIONAL_SUGGESTER_COMPLETION_PREFIX
@@ -177,14 +180,23 @@ def get_users():
 
 #**********************************Curd Operation for Notes*************************** """
 
-"""Create the Notes"""
-# @method_decorator(app_login_required, name='dispatch')
-class CreateNotes(CreateAPIView):
+class CreateNotes(APIView):
+    """Create the Notes using Post method"""
     serializer_class = NotesSerializer
+    def post(self, request):
+        try:
+            notes = request.data
+            # Create an Notes from the above data
+            serializer = NotesSerializer(data=notes)
+            if serializer.is_valid(raise_exception=True):
+                notes_saved = serializer.save()
+            return Response({"success": "Notes '{}' created successfully".format(notes_saved.title)})
+        except:
+            return Response("Invalid view function")
 
-"""Display the list of Notes"""
 class NotesList(APIView):
-   def get(self,request):
+    """Display the list of Notes"""
+    def get(self,request):
        try:
             notes = Notes.objects.all() # select the all object
             data = NotesSerializer(notes, many=True).data # serialize the data
@@ -192,8 +204,8 @@ class NotesList(APIView):
        except:
               return Response("Invalid Function") #if try block is False
 
-""" Display the details of list and store data into redis cache"""
 class NotesDetail(APIView):
+    """ Display the details of list and store data into redis cache"""
     def get(self, request, pk):
         try:
             note = get_object_or_404(Notes, pk=pk)
@@ -207,29 +219,35 @@ class NotesDetail(APIView):
             return Response(data)
         except:
             return Response("Note Does Not Exist")
-    def put(self, request, pk):
-        try:
-            note= get_object_or_404(Notes,pk=pk)
-            data = NotesSerializer(note).data
-            data.save()
-            return Response("Updated")
-        except:
-            return Response("Except")
 
-""" Delete the Node """
 class NotesDelete(APIView):
+    """ Delete the Note"""
     def delete(self, request, pk):
         try:
             note = Notes.objects.get(pk=pk) # check pk value
-            if note.deleted == True:  # if deleted field is true.
-                data = note.delete()  # if true then delete
-                print(data)
-            return Response("Delete the Note")
+            if note.deleted== True:
+                note.delete()  # if true then delete
+                return Response("Note is deleted")
+            else:
+                return Response("Note deleted =False,Please set note.deleted = True")
         except:
            return Response("Note does not Exist") # if try block is false
 
-""" Trash the Note"""
+class NotesUpdate(APIView):
+    """ API endpoint that allows users to be viewed or edited."""
+    def put(self,request, pk):
+        try:
+            note = Notes.objects.get(pk=pk) # get the note
+            data = request.data
+            serializer = NotesSerializer(note, data=data, partial=True)
+            if serializer.is_valid(raise_exception=True): # check the serializer is valid or not?
+                serializer.save() # if valid save
+                return Response({"Updated":serializer.data}, status=200)
+        except:
+            return Response({"Mesage":"Failed"},status=400)
+
 class TrashView(APIView):
+    """ Trash the Note"""
     def get(self,request,pk):
         try:                  # try block
             note = Notes.objects.get(pk=pk)
@@ -240,8 +258,8 @@ class TrashView(APIView):
         except:
             return Response("Notes  does not exist") # except block
 
-""" Archive The Note"""
 class ArchiveNotes(APIView):
+    """ Archive The Note"""
     def get(self,request,pk):
         try:
             note = Notes.objects.get(pk=pk)
@@ -257,8 +275,8 @@ class ArchiveNotes(APIView):
         except:
             return Response("Notes does not exist")
 
-""" set Reminder for Note The Note"""
 class ReminderNotes(APIView):
+    """ set Reminder for Note The Note"""
     def get(self,request,pk):
         try:
             note = Notes.objects.get(pk=pk)
@@ -274,13 +292,12 @@ class ReminderNotes(APIView):
 
 # *****************************Curd Operations on label**********************************"""
 
-""" Create the Label View"""
-# this method is takes the post method
 class CreateLabel(CreateAPIView):    # create label view using APIView
+    """ Create the Label View using post method"""
     serializer_class = LabelSerializer
 
-""" Display the List of labels"""
-class LabelList(APIView): # display list of all labels
+class LabelList(APIView):
+    """ Display the List of labels"""
     def get(self,request):
         try:
 
@@ -297,8 +314,8 @@ class LabelList(APIView): # display list of all labels
         except:
             return Response("Invalid Function")
 
-""" Display the detail of label """
-class LabelDetail(APIView):
+class LabelUpdateDetail(APIView):
+    """ Display the detail of label and Updated """
     def get(self, request, pk):
         try:
             label = get_object_or_404(Label, pk=pk)
@@ -314,10 +331,20 @@ class LabelDetail(APIView):
         except:
             return Response('Inavalid Response')
 
+    def put(self,request, pk):
+        try:
+            label = Label.objects.get(pk=pk) # get the note
+            data = request.data
+            serializer = LabelSerializer(label, data=data, partial=True)
+            if serializer.is_valid(raise_exception=True): # check the serializer is valid or not?
+                serializer.save() # if valid save
+                return Response({"Updated":serializer.data}, status=200)
+        except:
+            return Response({"Message":"Failed"},status=400)
 
-""" Delete Labels"""
 class LabelDelete(APIView):
-    def get(self, request, pk):  # delete the labels using pk
+    """ Delete perticular label"""
+    def delete(self, request, pk):  # delete the labels using pk
         try:
             label = Label.objects.get(pk=pk) # check pk value
             label.delete()  # call delete function
@@ -327,6 +354,7 @@ class LabelDelete(APIView):
 
 
 #**************************************Pagination View *******************************************"""
+""" This class is used to the for pagination purpose"""
 class CustomPagination(PageNumberPagination):
     page_size = 15 # default page size
     page_size_query_param = 'page_size'
@@ -346,24 +374,24 @@ class CustomPagination(PageNumberPagination):
         except:
             return Response("invalid pagination") # if user enter the invalid data
 
-""" Set pagination for Notes"""
-class NotesListPage(ListCreateAPIView): # class base view function
+class NotesListPage(ListCreateAPIView):
+    """ Set pagination for Notes"""
     serializer_class = NotesSerializer # Serializer
     pagination_class = CustomPagination # Use the CustomPagination class here
     queryset = Notes.objects.all() # select objects all
 
-""" Set pagination for Label"""
-class LabelListPage(ListCreateAPIView): # class base view function
+class LabelListPage(ListCreateAPIView):
+    """ Set pagination for Label"""
     serializer_class = LabelSerializer # Serializer
     pagination_class = CustomPagination # Use the CustomPagination class her
     queryset = Label.objects.all()
 
 #*********************************Registration for User using Rest API******************************
-"""
-this class is used for Register the rest User and create the JWT Token 
- and store the token in redis cache
-"""
 class RestUserRegister(CreateAPIView):
+    """
+    this class is used for Register the rest User and create the JWT Token
+     and store the token in redis cache
+    """
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
@@ -418,11 +446,11 @@ class RestUserRegister(CreateAPIView):
 
 
 #***********************************Rest Login for User***********************************
-"""
-this class is used for login the rest and create the JWT Token 
- and store the token in redis cache
-"""
 class RestLogin(APIView):
+    """
+    this class is used for login the rest and create the JWT Token
+     and store the token in redis cache
+    """
     # account and create the JWT token
     serializer_class = UserSerializer
     def post(self, request, *args, **kwargs):
@@ -469,7 +497,7 @@ class RestLogin(APIView):
 
 # ***************************************S3 AWS Implementation***************************
 class create_aws_bucket(CreateAPIView):
-    """Exercise create_bucket() method"""
+    """ create bucket using boto3 services method"""
     serializer_class = AWSModelSerializer
     # Assign these values before running the program
     def post(self, request, *args, **kwargs):
@@ -494,7 +522,7 @@ class create_aws_bucket(CreateAPIView):
 
 #***************************************Delete Buckets********************************
 class delete_aws_bucket(APIView):
-    """ Delete bucket using boto3"""
+    """ Delete bucket using boto3 service from rest api"""
     def delete(self, request, pk):
         res = {"message": "something bad happened",
                "success": False}
@@ -515,7 +543,8 @@ class delete_aws_bucket(APIView):
             return Response(" Bucket Already deleted")
 
 #**********************************List of the Buckets*****************************
-class Bucket_List(APIView): # display list of all labels
+class Bucket_List(APIView):
+    """display all the buckets in Rest API"""
     def get(self,request):
         try:
             bucket = AWSModel.objects.all() # select the object
@@ -526,7 +555,7 @@ class Bucket_List(APIView): # display list of all labels
 
 
 #**************************************S3 Upload files*******************************
-""" This method is used to upload the pic"""
+# upload the image using boto3 services
 def upload_s3(request):
     try:
         # local directory path
@@ -548,8 +577,8 @@ def upload_s3(request):
         return HttpResponse("Invalid data")
 
 #**************************************** Check bucket is exist*************************************
-""" Bucket is exist or not"""
 def aws_exist_bucket(request):
+    """ Bucket is exist or not"""
     # Assign this value before running the program
     test_bucket_name = 'django-s3-assets2'
     # Set up logging
@@ -562,22 +591,6 @@ def aws_exist_bucket(request):
         logging.info(f'{test_bucket_name} does not exist or '
                      f'you do not have permission to access it.')
     return HttpResponse("Bucket is Exist")
-
-def upload_profile(request):
-    """ this method is used to call the uploadto_aws method from s3_transfer  to upload pic in s3 bucket """
-    res={}
-    try:
-        uploaded_file = request.FILES.get('document')  # GETTING THE FILE FROM LOCAL DISK
-        print("Upload Image", uploaded_file)
-        var = imghdr.what(uploaded_file)
-        print("Image", var)
-        if var==None:
-            return HttpResponse("file must be jpeg or png")
-        else:
-            return boto.uploadto_aws(request, uploaded_file)  # RETURNING THE FILE FROM LOCAL DISK TO S3 METHOD
-    except ( AttributeError, ValueError):
-        res={"empty file cant be uploaded"}
-        return HttpResponse("empty file cant be uploaded")
 
 #**************************************ElasticSearch Implementation ******************
 class NotesDocumentViewSet(DocumentViewSet):
@@ -609,11 +622,11 @@ class NotesDocumentViewSet(DocumentViewSet):
         'field': 'id',
         'lookups': [
         LOOKUP_FILTER_RANGE,
-        LOOKUP_QUERY_IN,
-        LOOKUP_QUERY_GT,
-        LOOKUP_QUERY_GTE,
-        LOOKUP_QUERY_LT,
-        LOOKUP_QUERY_LTE,
+        LOOKUP_QUERY_IN, # In a given list.
+        LOOKUP_QUERY_GT, # Greater than.
+        LOOKUP_QUERY_GTE, # Greater than or equal to.
+        LOOKUP_QUERY_LT, # Less than.
+        LOOKUP_QUERY_LTE, # Less than or equal to.
     ],
     },
         'title': 'title.raw',
@@ -638,30 +651,32 @@ class NotesDocumentViewSet(DocumentViewSet):
         'remainder': 'remainder.raw',
     }
 
+
 #**********************************Implementation of Search Filter***********************
 
-""" Trash List using django filter backend """
 class TrashList(generics.ListAPIView):
+    """ List Trash note using django filter backend """
     queryset = Notes.objects.all() # select all the object
     serializer_class = NotesSerializer # serializer
     filter_backends = (DjangoFilterBackend,) # set the django filter
     filter_fields = ('trash',)
 
-""" Archive List using django filter backend"""
 class ArchiveList(generics.ListAPIView): # use teh ListApi view
+    """ List Archive note using django filter backend"""
     queryset = Notes.objects.all()  # select all objects
     serializer_class = NotesSerializer # serializer class
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('is_archive',) # set the filter which you want filter
 
-""" Display the notes by User"""
 class UserListView(generics.ListAPIView):
+    """Search the user using django backend search filter"""
     queryset = User.objects.all() # select all object
     serializer_class = UserSerializer # user serializer
     filter_backends = (filters.SearchFilter,) # use the backend filter
     search_fields = ('username','id')  # search user detail by using username field
 
 class NotesListView(generics.ListAPIView):
+    """Search the Notes using django backend search filter"""
     queryset = Notes.objects.all()
     serializer_class = NotesSerializer # define the serializer_class
     filter_backends = (filters.SearchFilter,) # use the backend filter
@@ -678,4 +693,31 @@ def search(request):
         notes = Notes.objects.filter(Q(title__icontains=q) | Q(id__icontains=q) | Q(color__icontains=q))
     return render(request, 'fundooapp/search.html', {'notes': notes})
 
+# def upload_profile(request, pk):
+#     note = get_object_or_404(Notes, pk=pk)
+#     data = NotesSerializer(note).data
+#     bucket_name = 'djnago-s3-assets2'
+#     file_name = data.image
+#     # Set up logging
+#     logging.basicConfig(level=logging.DEBUG,
+#                         format='%(levelname)s: %(asctime)s: %(message)s')
+#     # Upload a file
+#     response = boto.upload_file(file_name, bucket_name)
+#     if response:
+#         logging.info('File was uploaded')
+
+#     """ this method is used to call the uploadto_aws method from s3_transfer  to upload pic in s3 bucket """
+#     res={}
+#     try:
+#         uploaded_file = request.FILES.get('document')  # GETTING THE FILE FROM LOCAL DISK
+#         print("Upload Image", uploaded_file)
+#         var = imghdr.what(uploaded_file)
+#         print("Image", var)
+#         if var==None:
+#             return HttpResponse("file must be jpeg or png")
+#         else:
+#             return boto.uploadto_aws(request, uploaded_file)  # RETURNING THE FILE FROM LOCAL DISK TO S3 METHOD
+#     except ( AttributeError, ValueError):
+#         res={"empty file cant be uploaded"}
+#         return HttpResponse("empty file cant be uploaded")
 
