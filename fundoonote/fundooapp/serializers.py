@@ -3,15 +3,15 @@ from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
 from rest_framework import serializers  # import the serializer
 from .models import Notes, Label, UserProfile, AWSModel
 from .documents import NotesDocument
-""" User Serializer"""
 class UserSerializer(serializers.ModelSerializer): # serializer is used to convert the model data into JSON vice versa
+    """ User Serializer"""
     class Meta:
         model = User
         password = serializers.CharField(style={'input_type': 'password'})
         fields = ('url','username','password')
 
-""" Notes Serializer"""
 class NotesSerializer(serializers.ModelSerializer):
+    """ Notes Serializer"""
     class Meta:
         model = Notes
         fields = '__all__'
@@ -21,8 +21,8 @@ class LabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Label
         fields = '__all__'
-""" Registration Serializer """
 class RegisterSerializer(serializers.ModelSerializer):
+    """ Registration Serializer """
     username = serializers.CharField(max_length=30)
     email = serializers.RegexField(regex=r'^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$',
                                    required=True)
@@ -32,6 +32,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'password')  # fields of username,email and password
 
 class NotesDocumentSerializer(DocumentSerializer):
+    """ NotesDocument Serializer is serialize the NotesDocument data fields"""
     title = serializers.CharField(read_only=True)
     description = serializers.CharField(read_only=True)
     color = serializers.CharField(read_only=True)
@@ -40,8 +41,8 @@ class NotesDocumentSerializer(DocumentSerializer):
         document = NotesDocument
         fields = ('id', 'title', 'description', 'color','remainder')
 
-
 class AWSModelSerializer(serializers.ModelSerializer):
+    """ This Model is used the create the bucket and delete the bucket"""
     bucket_name = serializers.CharField(max_length=30)
     region = serializers.CharField(max_length=100)
 

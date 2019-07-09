@@ -56,8 +56,7 @@ INSTALLED_APPS = [
     'rest_auth',  # rest_auth is used to creating the API endpoints
     'allauth',
     'allauth.account',
-    'django.contrib.sites',
-    'django_celery_beat',
+    'django.contrib.sites', # django site domain
     'django_elasticsearch_dsl',  # ElasticSearch DSL is a high level library which is use to writing the qu
     'django_elasticsearch_dsl_drf',
 
@@ -138,7 +137,6 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 env = environ.Env(
     SECRET_KEY=str,
     DEBUG=(bool, False),
-    # ALLOWED_HOSTS=(list, ['127.0.0.1:8000']),
     DATABASE_URL=str,
 )
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -248,5 +246,3 @@ AWS_DEFAULT_ACL = 'private'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'fundooapp/static'),
 ]
-STATIC_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

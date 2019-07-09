@@ -11,6 +11,10 @@ class  UserProfile(models.Model):
     def __str__(self):
         return self.user
 
+"""
+Model Name: Notes
+Fields Name: title, description, created_by, pub_date, remainder, is_archive, deleted, color, image, trash
+"""
 class Notes(models.Model):
     # title field  contains the validators
     title = models.CharField(max_length=400, validators=[validate_alphanumeric])
@@ -20,6 +24,7 @@ class Notes(models.Model):
     remainder = models.DateTimeField(default=None, null=True, blank=True)
     is_archive = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+    # color choice
     COLOR_CHOICES = (
         ('Red','Red'),
         ('Ged','Green'),
@@ -29,6 +34,7 @@ class Notes(models.Model):
     image = models.ImageField(default=None, null=True)
     trash = models.BooleanField(default=False)
 
+    # print string Format
     def __str__(self):
         return self.title
 
@@ -37,7 +43,8 @@ class Label(models.Model):
     text = models.CharField(max_length=100, validators=[validate_alphabetical])
     pub_date = models.DateTimeField(auto_now=True)
 
-    def __str__(self): # print string Format
+    # print string Format
+    def __str__(self):
         return  self.text
 
 """ AWS Models"""
