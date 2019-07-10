@@ -25,24 +25,26 @@ urlpatterns = [
     path("Notes/Reminder/<int:pk>/", views.ReminderNotes.as_view(), name='note_reminder'),
     path("Notes/TrashList/", views.TrashList.as_view(), name='trash_list'),
     path("Notes/Pagination/", views.NotesListPage.as_view(), name="note_page"),
+
     # List of label URL
     path("Label/List/", views.LabelList.as_view(), name="label_list"),
     path("Label/Detail/<int:pk>/", views.LabelUpdateDetail.as_view(), name="label_detail"),
     path("Label/Create/", views.CreateLabel.as_view(), name="label_create"),
     path("Label/Delete/<int:pk>/", views.LabelDelete.as_view(), name='delete_label'),
     path("Label/Pagination/",views.LabelListPage.as_view(), name="label_page"),
-    path("upload/",views.upload_s3,name="upload"),
+
+    # List of the AWS bucket url
     path("bucket_aws/create/", views.create_aws_bucket.as_view(), name='create_bucket'),
     path("bucket_aws/delete/<int:pk>/", views.delete_aws_bucket.as_view(), name='delete_bucket'),
     path("bucket_aws/List/", views.Bucket_List.as_view(), name="bucket_list"),
+    path("upload/", views.upload_s3, name="upload"),
 
     # search operations url
     path("Search/user/", views.UserListView.as_view(), name="user"),
     path("Search/notes/",views.NotesListView.as_view(), name="note"),
     path("search/", views.search, name='search'),
 
-    path('Rest-users/', include('rest_auth.urls')),
-    path('Rest-users/',ConfirmEmailView.as_view(),name="view"),
-    # path('upload2/<int:pk>/',views.upload_profile, name='up')
+    path('Rest-auth/', include('rest_auth.urls')),
+    path('Rest-auth/',ConfirmEmailView.as_view(),name="view"),
 ]
 

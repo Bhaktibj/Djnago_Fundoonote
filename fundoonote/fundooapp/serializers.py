@@ -16,8 +16,8 @@ class NotesSerializer(serializers.ModelSerializer):
         model = Notes
         fields = '__all__'
 
-""" label Serializer"""
 class LabelSerializer(serializers.ModelSerializer):
+    """ label Serializer"""
     class Meta:
         model = Label
         fields = '__all__'
@@ -42,7 +42,7 @@ class NotesDocumentSerializer(DocumentSerializer):
         fields = ('id', 'title', 'description', 'color','remainder')
 
 class AWSModelSerializer(serializers.ModelSerializer):
-    """ This Model is used the create the bucket and delete the bucket"""
+    """ This Serializer is used to create and delete  bucket"""
     bucket_name = serializers.CharField(max_length=30)
     region = serializers.CharField(max_length=100)
 

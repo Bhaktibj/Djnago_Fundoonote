@@ -22,7 +22,7 @@ from django_elasticsearch_dsl_drf.filter_backends import FilteringFilterBackend,
     SuggesterFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 from rest_framework.generics import CreateAPIView, ListCreateAPIView
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, status
 
 from .tokens import account_activation_token # activate the users account
 from .serializers import UserSerializer, RegisterSerializer, AWSModelSerializer, NotesDocumentSerializer
@@ -56,7 +56,6 @@ boto= BotoService()
 """this method is used to display the home page"""
 def home(request):
     return render(request, 'fundooapp/home.html', {})
-
 
 """this method is used to enter the fundooapp"""
 
@@ -110,33 +109,44 @@ def register(request):      # this method is used to signup the user
 @csrf_exempt
 def user_login(request):
     # if this is a POST request we need to process the form data
-    res = {"message": "something bad happened",
-           "data": {},
-           "success": False}
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        # authentication of user name and password
-        user = authenticate(username=username, password=password)
-        if user:
-            if user.is_active:
-                payload = {'username': username, 'password': password}
-                jwt_token = {
-                    'token': jwt.encode(payload, "Cypher", algorithm='HS256').decode('utf-8')
-                }
-                print(jwt_token)  # print JWT Token
-                """ JWT token stored in cache"""
-                token = jwt_token[ 'token' ]
-                print(token)
-                login(request, user)
-                print(user.username)
-                return render(request, 'fundooapp/index.html', {},res)
+        try:
+            response = {
+                "message": "something bad happened",
+                "data": {},
+                "success": False
+            }
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            if username is None and password is None:
+                raise Exception('Username and password is required')
+            if username is None:
+                raise Exception('Username is required')
+            if password is None:
+                raise Exception('Password is required')
+            # authentication of user name and password
+            user = authenticate(username=username, password=password)
+            if user:
+                if user.is_active:
+                    payload = {'username': username, 'password': password}
+                    jwt_token = {
+                        'token': jwt.encode(payload, "Cypher", algorithm='HS256').decode('utf-8')
+                    }
+                    print(jwt_token)  # print JWT Token
+                    """ JWT token stored in cache"""
+                    token = jwt_token[ 'token' ]
+                    print(token)
+                    login(request, user)
+                    print(user.username)
+                    return render(request, 'fundooapp/index.html', {}, response)
+                else:
+                    return HttpResponse("Your account was inactive.")
             else:
-                return HttpResponse("Your account was inactive.")
-        else:
-            print("Someone tried to login and failed.")
-            print("They used username: {} and password: {}".format(username, password))
-            return HttpResponse("Invalid login details given")
+                print("Someone tried to login and failed.")
+                print("They used username: {} and password: {}".format(username, password))
+                return HttpResponse("Invalid login details given")
+        except:
+            return render(request, 'fundooapp/user_login.html', {})
     else:
         return render(request, 'fundooapp/user_login.html', {})
 
@@ -159,16 +169,12 @@ def activate(request, uidb64, token):   # this method is used to generate confir
     else:
         return HttpResponse('Activation link is invalid!')
 
-"""
-This class is used to display the all users in rest_framework
-"""
+
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
+    """This Class is used to create the user"""
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-print(UserViewSet.__doc__)
+print("UserViewSet:",UserViewSet.__doc__)
 
 """ This method is used to display all users list"""
 @method_decorator(app_login_required, name='dispatch')
@@ -178,184 +184,260 @@ def get_users():
     return JsonResponse(users_list, safe=False)
 
 
-#**********************************Curd Operation for Notes*************************** """
+#**********************************Curd Operation on Notes*************************** """
 
 class CreateNotes(APIView):
-    """Create the Notes using Post method"""
+    """This class View is used Create the Note using Post method"""
     serializer_class = NotesSerializer
     def post(self, request):
+        res ={'message':"Something bad happened",
+              'success': False}
         try:
             notes = request.data
             # Create an Notes from the above data
             serializer = NotesSerializer(data=notes)
             if serializer.is_valid(raise_exception=True):
-                notes_saved = serializer.save()
-            return Response({"success": "Notes '{}' created successfully".format(notes_saved.title)})
+                serializer.save()
+                res['message']= "Successfully created note"
+                res['success']= True
+            return Response(res,status=status.HTTP_201_CREATED)
         except:
-            return Response("Invalid view function")
+            return Response(res,status=status.HTTP_400_BAD_REQUEST)
+
+print("CreateNotes:",CreateNotes.__doc__)
 
 class NotesList(APIView):
     """Display the list of Notes"""
     def get(self,request):
+       res = {'message': "Something bad happened",
+              'data':{},
+               'success': False}
        try:
             notes = Notes.objects.all() # select the all object
             data = NotesSerializer(notes, many=True).data # serialize the data
-            return Response(data) # return the data
+            res[ 'message' ] = "Successfully display the note"
+            res[ 'success' ] = True
+            res[ 'data' ] = data
+            return Response(res, status=200) # return the data
        except:
-              return Response("Invalid Function") #if try block is False
+              return Response(res, status=404) #if try block is False
 
 class NotesDetail(APIView):
     """ Display the details of list and store data into redis cache"""
     def get(self, request, pk):
+        res = {'message': "Something bad happened",
+               'data': {},
+               'success': False}
         try:
             note = get_object_or_404(Notes, pk=pk)
             data = NotesSerializer(note).data
-            dict = pickle.dumps(data)  # dump the file
-            r.set_value('mydict', dict) # stored the value into key
+            dict_data = pickle.dumps(data)  # dump the file
+            r.set_value('dict', dict_data) # stored the value into key
             print("set data")
-            read_dict = r.get_value('mydict')  # read the value
+            read_dict = r.get_value('dict')  # read the value
             data1 = pickle.loads(read_dict)  # loads data disk into data1
             print(data1)
-            return Response(data)
+            res[ 'message' ] = "Successfully display the note"
+            res[ 'success' ] = True
+            res[ 'data' ] = data
+            return Response(res, status=200)
         except:
-            return Response("Note Does Not Exist")
+            return Response(res,status=404)
 
 class NotesDelete(APIView):
     """ Delete the Note"""
     def delete(self, request, pk):
+        res = {'message': "Something bad happened",
+               'success': False}
         try:
             note = Notes.objects.get(pk=pk) # check pk value
-            if note.deleted== True:
+            if note.deleted == True:
                 note.delete()  # if true then delete
-                return Response("Note is deleted")
+                res[ 'message' ] = "Successfully deleted the note"
+                res[ 'success' ] = True
+                return Response(res,status=200)
             else:
-                return Response("Note deleted =False,Please set note.deleted = True")
+                return Response("Note deleted =False,Please make note.deleted = True")
         except:
-           return Response("Note does not Exist") # if try block is false
+           return Response(res,status=404) # if try block is false
 
 class NotesUpdate(APIView):
     """ API endpoint that allows users to be viewed or edited."""
     def put(self,request, pk):
+        res = {'message': "Something bad happened",
+               'data':{},
+               'success': False}
         try:
             note = Notes.objects.get(pk=pk) # get the note
             data = request.data
             serializer = NotesSerializer(note, data=data, partial=True)
             if serializer.is_valid(raise_exception=True): # check the serializer is valid or not?
                 serializer.save() # if valid save
-                return Response({"Updated":serializer.data}, status=200)
+                res[ 'message' ] = "Successfully Updated note"
+                res['data']= serializer.data
+                res[ 'success' ] = True
+                return Response(res, status=200)
         except:
-            return Response({"Mesage":"Failed"},status=400)
+            return Response(res, status=404)
 
 class TrashView(APIView):
     """ Trash the Note"""
     def get(self,request,pk):
+        res = {'message': "Something bad happened",
+               'success': False}
         try:                  # try block
             note = Notes.objects.get(pk=pk)
             if note.trash == False and note.deleted == True: # check trash and delete field
                 note.trash = True # if trash = false
                 note.save()
-            return Response("Note is Trash") # if trash is false then set trash = True
+                res[ 'message' ] = "Successfully Trash the note"
+                res[ 'success' ] = True
+            return Response(res, status=200) # if trash is false then set trash = True
         except:
-            return Response("Notes  does not exist") # except block
+            return Response(res, status=404) # except block
 
 class ArchiveNotes(APIView):
     """ Archive The Note"""
     def get(self,request,pk):
+        res = {'message': "Something bad happened",
+               'success': False}
         try:
             note = Notes.objects.get(pk=pk)
             if note.deleted == False and note.trash == False:
                 if note.is_archive == False: # Check if trash is false or true
                     note.is_archive = True # if false then set True
                     note.save() # save the note
+                    res[ 'message' ] = "Successfully Trash the note"
+                    res[ 'success' ] = True
                 else:
                     return Response("Already archive")
             else:
                 return Response("Note is already deleted or trash")
-            return Response("Archive is set")
+            return Response(res, status=200)
         except:
-            return Response("Notes does not exist")
+            return Response(res,status=404)
 
 class ReminderNotes(APIView):
     """ set Reminder for Note The Note"""
     def get(self,request,pk):
+        res = {'message': "Something bad happened",
+               'success': False}
         try:
             note = Notes.objects.get(pk=pk)
             if note.remainder == None: # Check reminder is set or not
                 note.remainder =note.pub_date # if none then set pub_date
                 note.save() # save the note
+                res[ 'message' ] = "Successfully Trash the note"
+                res[ 'success' ] = True
             else:
                 return Response("Already reminder is set") # if set
-            return Response("Reminder is set")
+            return Response(res, status=200)
         except:
-            return Response(" Note does not Exist")
+            return Response(res, status=404)
 
 
 # *****************************Curd Operations on label**********************************"""
 
-class CreateLabel(CreateAPIView):    # create label view using APIView
+class CreateLabel(APIView):    # create label view using APIView
     """ Create the Label View using post method"""
     serializer_class = LabelSerializer
+    def post(self, request):
+        res ={'message':"Something bad happened",
+              'success': False}
+        try:
+            data = request.data
+            # Create an Notes from the above data
+            serializer = LabelSerializer(data=data)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                res['message']= "Successfully created Label"
+                res['success']= True
+            return Response(res,status=status.HTTP_201_CREATED)
+        except:
+            return Response(res,status=status.HTTP_400_BAD_REQUEST)
 
 class LabelList(APIView):
     """ Display the List of labels"""
     def get(self,request):
+        res = {'message': "Something bad happened",
+               'data': {},
+               'success': False}
         try:
 
             label = Label.objects.all()
             data = LabelSerializer(label, many=True).data
             """ Stored the data into redis cache"""
-            dict = pickle.dumps(data)  # dump the data pickle into dictionary
-            r.set_value('mydict', dict)  # store the data into key value
+            dict_data = pickle.dumps(data)  # dump the data pickle into dictionary
+            r.set_value('dict', dict_data)  # store the data into key value
             print("set data")
-            read_dict = r.get_value('mydict')  # get the data from redis cache
+            read_dict = r.get_value('dict')  # get the data from redis cache
             data1 = pickle.loads(read_dict)  # load the pickle
             print(data1)
-            return Response(data)
+            res[ 'message' ] = "Successfully Display the list Label"
+            res[ 'success' ] = True
+            res['data'] = data
+            return Response(res, status=200)
         except:
-            return Response("Invalid Function")
+            return Response(res, status=404)
 
 class LabelUpdateDetail(APIView):
     """ Display the detail of label and Updated """
     def get(self, request, pk):
+        res = {'message': "Something bad happened",
+               'data': {},
+               'success': False}
         try:
             label = get_object_or_404(Label, pk=pk)
             data = LabelSerializer(label).data
             """ Stored the data into redis cache"""
-            dict = pickle.dumps(data)  # dump the data pickle into dictionary
-            r.set_value('mydict', dict) # store the data into key value
+            dict_data = pickle.dumps(data)  # dump the data pickle into dictionary
+            r.set_value('dict', dict_data) # store the data into key value
             print("set data")
-            read_dict = r.get_value('mydict') # get the data from redis cache
+            read_dict = r.get_value('dict') # get the data from redis cache
             data1 = pickle.loads(read_dict) # load the pickle
             print(data1)
-            return Response(data) # response in json format
+            res[ 'message' ] = "Successfully display Label"
+            res[ 'success' ] = True
+            res[ 'data' ] = data
+            return Response(res, status=200) # response in json format
         except:
-            return Response('Inavalid Response')
+            return Response(res, status=404)
 
     def put(self,request, pk):
+        res = {'message': "Something bad happened",
+               'data': {},
+               'success': False}
         try:
             label = Label.objects.get(pk=pk) # get the note
             data = request.data
             serializer = LabelSerializer(label, data=data, partial=True)
             if serializer.is_valid(raise_exception=True): # check the serializer is valid or not?
                 serializer.save() # if valid save
-                return Response({"Updated":serializer.data}, status=200)
+                res[ 'message' ] = "Successfully Updated Label"
+                res[ 'success' ] = True
+                res[ 'data' ] = serializer.data
+                return Response(res, status=200)
         except:
-            return Response({"Message":"Failed"},status=400)
+            return Response(res,status=400)
 
 class LabelDelete(APIView):
-    """ Delete perticular label"""
+    """ Delete particular label"""
     def delete(self, request, pk):  # delete the labels using pk
+        res = {'message': "Something bad happened",
+               'success': False}
         try:
             label = Label.objects.get(pk=pk) # check pk value
             label.delete()  # call delete function
-            return Response("Delete the Label")
+            res[ 'message' ] = "Successfully deleted Label"
+            res[ 'success' ] = True
+            return Response(res,status=200)
         except:
-            return Response("Does not exist Label") # if try block is false
+            return Response(res,status=404) # if try block is false
 
 
 #**************************************Pagination View *******************************************"""
-""" This class is used to the for pagination purpose"""
 class CustomPagination(PageNumberPagination):
+    """ This class is used to the for pagination purpose"""
     page_size = 15 # default page size
     page_size_query_param = 'page_size'
     max_page_size = 100
@@ -372,7 +454,7 @@ class CustomPagination(PageNumberPagination):
                 'results': data # result
             })
         except:
-            return Response("invalid pagination") # if user enter the invalid data
+            return Response("invalid value pagination") # if user enter the invalid data
 
 class NotesListPage(ListCreateAPIView):
     """ Set pagination for Notes"""
@@ -387,7 +469,7 @@ class LabelListPage(ListCreateAPIView):
     queryset = Label.objects.all()
 
 #*********************************Registration for User using Rest API******************************
-class RestUserRegister(CreateAPIView):
+class RestUserRegister(APIView):
     """
     this class is used for Register the rest User and create the JWT Token
      and store the token in redis cache
@@ -440,13 +522,13 @@ class RestUserRegister(CreateAPIView):
                         res['message'] = "Register Successfully...Please activate your Account",
                         res[ 'data' ] = token,
                         res[ 'success' ] = True,
-                return Response(res) # if try block is True return the response
+                return Response(res,status=201) # if try block is True return the response
         except:
-            return Response(res)
+            return Response(res,status=400)
 
 
 #***********************************Rest Login for User***********************************
-class RestLogin(APIView):
+class Login(APIView):
     """
     this class is used for login the rest and create the JWT Token
      and store the token in redis cache
@@ -454,15 +536,18 @@ class RestLogin(APIView):
     # account and create the JWT token
     serializer_class = UserSerializer
     def post(self, request, *args, **kwargs):
-        res = {"message": "something bad happened", # give the element what you want in rest api
-               "data": {},
-               "success": False,
-               }
         try:
+            response = {
+                "message": "something bad happened",
+                "data": {},
+                "success": False
+            }
             username = request.data['username']
-            if username is None:                   # if username is None
-                raise Exception("Username is required") # raise exception Username is required
             password = request.data['password']
+            if password is None and username is None:
+                raise Exception("Username & password is required")
+            if username is None:                    # if username is None
+                raise Exception("Username is required") # raise exception Username is required
             if password is None:
                 raise Exception("password is required")
             user = authenticate(username=username, password=password) #validate the password
@@ -483,16 +568,16 @@ class RestLogin(APIView):
                     print("Display the length of Token")
                     len_str = r.length_str("p3")
                     print(len_str) # returns the length of token
-                    res['message'] = "Logged in Successfully"
-                    res['data'] = token
-                    res['success'] = True
-                    return Response(res)  # if active then return response with jWT Token
+                    response['message'] = "Logged in Successfully"
+                    response['data'] = token
+                    response['success'] = True
+                    return Response(response)  # if active then return response with jWT Token
                 else:
-                    return Response(res) # else user is not active
+                    return Response(response) # else user is not active
             if user is None:
-                return Response(res)  # else user is not exist
+                return Response(response)  # else user is not exist
         except:
-            return Response(res) # print response as is
+            return Response(response) # print response as is
 
 
 # ***************************************S3 AWS Implementation***************************
@@ -510,8 +595,6 @@ class create_aws_bucket(CreateAPIView):
         else:
             aws = AWSModel.objects.create(bucket_name=bucket_name, region=region)
             aws.save()
-            logging.basicConfig(level=logging.DEBUG,
-                            format='%(levelname)s: %(asctime)s: %(message)s')
         # Create a bucket in a specified region
             if boto.create_bucket(bucket_name=bucket_name, region=region):
                 logging.info(f'Created bucket {bucket_name} '
@@ -529,18 +612,13 @@ class delete_aws_bucket(APIView):
         try:
             bucket = AWSModel.objects.get(pk=pk) # check pk value
             bucket.delete()  # call delete function
-    # Assign this value before running the program
-    # Set up logging
-            logging.basicConfig(level=logging.DEBUG,
-                        format='%(levelname)s: %(asctime)s: %(message)s')
-            # Delete the bucket
             if boto.delete_bucket(bucket.bucket_name):
                 logging.info(f'{bucket.bucket_name} was deleted')
                 res[ 'message' ] = "Bucket Is Deleted Successfully",
                 res[ 'success' ] = True,
-            return Response(res)
+            return Response(res,status=200)
         except:
-            return Response(" Bucket Already deleted")
+            return Response(res)
 
 #**********************************List of the Buckets*****************************
 class Bucket_List(APIView):
@@ -575,22 +653,6 @@ def upload_s3(request):
         return HttpResponse ("Image is Upload")
     except:
         return HttpResponse("Invalid data")
-
-#**************************************** Check bucket is exist*************************************
-def aws_exist_bucket(request):
-    """ Bucket is exist or not"""
-    # Assign this value before running the program
-    test_bucket_name = 'django-s3-assets2'
-    # Set up logging
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(levelname)s: %(asctime)s: %(message)s')
-    # Check if the bucket exists
-    if boto.bucket_exists(test_bucket_name):
-        print(f'{test_bucket_name} exists and you have permission to access it.')
-    else:
-        logging.info(f'{test_bucket_name} does not exist or '
-                     f'you do not have permission to access it.')
-    return HttpResponse("Bucket is Exist")
 
 #**************************************ElasticSearch Implementation ******************
 class NotesDocumentViewSet(DocumentViewSet):
@@ -692,32 +754,4 @@ def search(request):
     elif q is not None:
         notes = Notes.objects.filter(Q(title__icontains=q) | Q(id__icontains=q) | Q(color__icontains=q))
     return render(request, 'fundooapp/search.html', {'notes': notes})
-
-# def upload_profile(request, pk):
-#     note = get_object_or_404(Notes, pk=pk)
-#     data = NotesSerializer(note).data
-#     bucket_name = 'djnago-s3-assets2'
-#     file_name = data.image
-#     # Set up logging
-#     logging.basicConfig(level=logging.DEBUG,
-#                         format='%(levelname)s: %(asctime)s: %(message)s')
-#     # Upload a file
-#     response = boto.upload_file(file_name, bucket_name)
-#     if response:
-#         logging.info('File was uploaded')
-
-#     """ this method is used to call the uploadto_aws method from s3_transfer  to upload pic in s3 bucket """
-#     res={}
-#     try:
-#         uploaded_file = request.FILES.get('document')  # GETTING THE FILE FROM LOCAL DISK
-#         print("Upload Image", uploaded_file)
-#         var = imghdr.what(uploaded_file)
-#         print("Image", var)
-#         if var==None:
-#             return HttpResponse("file must be jpeg or png")
-#         else:
-#             return boto.uploadto_aws(request, uploaded_file)  # RETURNING THE FILE FROM LOCAL DISK TO S3 METHOD
-#     except ( AttributeError, ValueError):
-#         res={"empty file cant be uploaded"}
-#         return HttpResponse("empty file cant be uploaded")
 

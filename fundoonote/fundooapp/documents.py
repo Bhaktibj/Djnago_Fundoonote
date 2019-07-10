@@ -22,7 +22,7 @@ class NotesDocument(DocType):
 
         }
     )
-    """ based on description field Documents"""
+    # based on description field Documents
     description = fields.StringField(
         analyzer=html_strip,
         fields={
@@ -30,14 +30,14 @@ class NotesDocument(DocType):
 
         }
     )
-    """ based on color field Documents"""
+    # based on color field Documents
     color = fields.StringField(
         analyzer=html_strip,
         fields={
             'raw': fields.StringField(analyzer='keyword'),
         }
     )
-    """based on Reminder field Documents"""
+    # based on Reminder field Documents
     remainder = fields.StringField(
         analyzer=html_strip,
         fields={
