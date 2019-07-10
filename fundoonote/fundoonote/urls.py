@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'api/', include_docs_urls(title='Notes API'), name='api'), # CoreApi
     url('',include('django.contrib.auth.urls')),
     url('RestUsers/register/', views.RestUserRegister.as_view(), name='rest_register'),
-    url('RestUsers/login/', views.RestLogin.as_view(), name='rest_login'),
+    url('RestUsers/login/', views.Login.as_view(), name='rest_login'),
 ]
 
 

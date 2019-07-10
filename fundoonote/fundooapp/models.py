@@ -5,16 +5,14 @@ from django.core.validators import RegexValidator
 validate_alphanumeric = RegexValidator(r'^[a-zA-Z0-9]*$', 'Only alphanumeric characters are allowed.')
 validate_alphabetical = RegexValidator('^[a-zA-Z]', 'Only Alphabetical Characters are allowed.')
 
+# this model is used for RestRegister
 class  UserProfile(models.Model):
     user = models.CharField(max_length=30)
 
     def __str__(self):
         return self.user
 
-"""
-Model Name: Notes
-Fields Name: title, description, created_by, pub_date, remainder, is_archive, deleted, color, image, trash
-"""
+"""Notes Model """
 class Notes(models.Model):
     # title field  contains the validators
     title = models.CharField(max_length=400, validators=[validate_alphanumeric])

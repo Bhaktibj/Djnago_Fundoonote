@@ -1,6 +1,7 @@
 from rest_framework.exceptions import PermissionDenied
 from django.http import JsonResponse
 import jwt
+# View decorators can be used to restrict access to certain views.
 def app_login_required(function):
     def wrap(request, *args, **kwargs):
         res = {}
@@ -9,9 +10,7 @@ def app_login_required(function):
             # token = red.get(red, 'token')
             print("Token", token)
             decoded = jwt.decode(token, "secret_key", algorithm='HS256')
-            print("Decoded Data", decoded)
-            id = decoded.get('id')  # Additional code of a decorator to get an email
-            print("User_id", id)
+            id = decoded.get('id')
             if id:
                 return function(request, *args, **kwargs)
             else:

@@ -2,6 +2,8 @@ from __future__ import absolute_import, unicode_literals
 from .models import Notes, Label
 from celery import shared_task
 
+""" The @shared_task decorator returns a proxy that always uses the task instance 
+in the current_app: """
 @shared_task
 def count_notes():         # count the number of notes
     return Notes.objects.count()

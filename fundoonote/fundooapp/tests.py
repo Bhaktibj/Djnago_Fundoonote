@@ -51,11 +51,3 @@ class EnterPageTests(SimpleTestCase):
         response = self.client.get('/')
         self.assertNotContains(
             response, 'Hi there! I should not be on the page.')
-
-class EntryTest(TestCase):
-    def test_get_api_json(self):
-        resp = self.client.get('/RestAPI/login/', format='json')
-        self.assertValidJSONResponse(resp)
-
-    def assertValidJSONResponse(self, resp):
-        pass
