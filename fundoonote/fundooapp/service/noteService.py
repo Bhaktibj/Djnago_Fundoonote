@@ -1,10 +1,8 @@
-from .models
+from models import Notes
 class NoteService:
-    def __init__(noteId=False):
-        if noteId:
-
-        pass
-
+    def __init__(self, note_id=False):
+        if self:
+            pass
     def getNote(self):
         if not self._id:
             raise Exception('Unable to find the note')
@@ -23,7 +21,7 @@ class NoteService:
     def archive(self):
         pass
 
-    def reminder(self):
+    def remainder(self):
         pass
 
     def trash(self):
