@@ -1,0 +1,47 @@
+{% extends "loginapp/base.html" %}
+{% block body_block %}
+<style>
+    p,h2{
+     font-style: italic;
+     color:brown;
+
+   }
+</style>
+<body>
+<marquee direction="right"><p>If You forgot your password just click on above <span>ResetPassword</span> Link</p></marquee>
+<div class="container" style="back">
+    <br><br><br><br><br><p align="left" style="font-size:50px">Welcome to the FundooApp!!! </p>
+    {% if user.is_authenticated %}
+    <div class="row">
+        <div class="col-sm-12 mb-3">
+            <h2 class="text-center"> Welcome {{ user.username }} </h2>
+        </div>
+        {% for ass in backends.associated %}
+          {% if ass.provider == 'facebook' %}
+            <div class="col-md-6 text-center">
+                <img src="{{ass.extra_data.picture.data.url}}" alt="" width="150" height="150" style="border-radius: 50%">
+            </div>
+            <div class="col-md-6 social-container my-2">
+                <p> Signed in via:  {{ ass.provider }} </p>
+                <p> Name:  {{ ass.extra_data.name }} </p>
+                <p> Provider url: <a href="{{ass.extra_data.profile_url}}">link</a></p>
+            </div>
+          {% endif %}
+        {% if ass.provider == 'linkedin-oauth2' %}
+            <div class="col-md-6 text-center">
+                <img src="{{ass.extra_data.picture.data.url}}" alt="" width="150" height="150" style="border-radius: 50%">
+            </div>
+            <div class="col-md-6 social-container my-2">
+                <p> Signed in via:  Linkedin </p>
+                <p> Name:  {{ ass.extra_data.name }} </p>
+                <p> Provider url: <a href="{{ass.extra_data.profile_url}}">link</a></p>
+            </div>
+          {% endif %}
+       {% endfor %}
+        <div class="col-sm-12 mt-2 text-center">
+        </div>
+    {% else %}
+        <br><br><br><h2 align="right">Register or Login if you'd like to..</h2>
+    {% endif %}
+{% endblock %}
+</body>
