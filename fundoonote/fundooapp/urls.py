@@ -14,37 +14,39 @@ urlpatterns = [
     views.activate, name='activate'),# url activate the user registration
 
     # list of Notes URL
-    path("Notes/List/", views.NotesList.as_view(), name="note_list"),
-    path("Notes/Detail/<int:pk>/", views.NotesDetail.as_view(), name="note_detail"),
-    path("Notes/Create/", views.CreateNotes.as_view(), name="note_create"),
-    path("Notes/Delete/<int:pk>/", views.NotesDelete.as_view(),name='note_delete'),
-    path("Notes/Update/<int:pk>/", views.NotesUpdate.as_view(), name='note_update'),
-    path("Notes/Trash/<int:pk>/", views.TrashView.as_view(), name='note_trash'),
-    path("Notes/Archive/<int:pk>/", views.ArchiveNotes.as_view(), name='note_archive'),
-    path("Notes/ArchiveList/", views.ArchiveList.as_view(), name='note_archive_list'),
-    path("Notes/Reminder/<int:pk>/", views.ReminderNotes.as_view(), name='note_reminder'),
-    path("Notes/TrashList/", views.TrashList.as_view(), name='trash_list'),
-    path("Notes/Pagination/", views.NotesListPage.as_view(), name="note_page"),
+    path(r'Notes/List/', views.NotesList.as_view(), name="note_list"),
+    path(r'Notes/Detail/<int:pk>/', views.NotesDetail.as_view(), name="note_detail"),
+    path(r'Notes/Create/', views.CreateNotes.as_view(), name="note_create"),
+    path(r'Notes/Delete/<int:pk>/', views.NotesDelete.as_view(),name='note_delete'),
+    path(r'Notes/Update/<int:pk>/', views.NotesUpdate.as_view(), name='note_update'),
+    path(r'Notes/Trash/<int:pk>/', views.TrashView.as_view(), name='note_trash'),
+    path(r'Notes/Archive/<int:pk>/', views.ArchiveNotes.as_view(), name='note_archive'),
+    path(r'Notes/ArchiveList/', views.ArchiveList.as_view(), name='note_archive_list'),
+    path(r'Notes/Reminder/<int:pk>/', views.ReminderNotes.as_view(), name='note_reminder'),
+    path(r'Notes/TrashList/', views.TrashList.as_view(), name='trash_list'),
+    path(r'Notes/Pagination/', views.NotesListPage.as_view(), name="note_page"),
 
     # List of label URL
-    path("Label/List/", views.LabelList.as_view(), name="label_list"),
-    path("Label/Detail/<int:pk>/", views.LabelUpdateDetail.as_view(), name="label_detail"),
-    path("Label/Create/", views.CreateLabel.as_view(), name="label_create"),
-    path("Label/Delete/<int:pk>/", views.LabelDelete.as_view(), name='delete_label'),
-    path("Label/Pagination/",views.LabelListPage.as_view(), name="label_page"),
+    path(r'Label/List/', views.LabelList.as_view(), name="label_list"),
+    path(r'Label/Detail/<int:pk>/', views.LabelUpdateDetail.as_view(), name="label_detail"),
+    path(r'Label/Create/', views.CreateLabel.as_view(), name="label_create"),
+    path(r'Label/Delete/<int:pk>/', views.LabelDelete.as_view(), name='delete_label'),
+    path(r'Label/Pagination/',views.LabelListPage.as_view(), name="label_page"),
 
     # List of the AWS bucket url
-    path("bucket_aws/create/", views.create_aws_bucket.as_view(), name='create_bucket'),
-    path("bucket_aws/delete/<int:pk>/", views.delete_aws_bucket.as_view(), name='delete_bucket'),
-    path("bucket_aws/List/", views.Bucket_List.as_view(), name="bucket_list"),
-    path("upload/", views.upload_s3, name="upload"),
+    path(r'bucket_aws/create/', views.create_aws_bucket.as_view(), name='create_bucket'),
+    path(r'bucket_aws/delete/<int:pk>/', views.delete_aws_bucket.as_view(), name='delete_bucket'),
+    path(r'bucket_aws/List/', views.Bucket_List.as_view(), name="bucket_list"),
+    path(r'upload/', views.upload_s3, name="upload"),
 
     # search operations url
-    path("Search/user/", views.UserListView.as_view(), name="user"),
-    path("Search/notes/",views.NotesListView.as_view(), name="note"),
-    path("search/", views.search, name='search'),
+    path(r'Search/user/', views.UserListView.as_view(), name="user"),
+    path(r'Search/notes/',views.NotesListView.as_view(), name="note"),
+    path(r'search/', views.search, name='search'),
 
-    path('Rest-auth/', include('rest_auth.urls')),
-    path('Rest-auth/',ConfirmEmailView.as_view(),name="view"),
+    path(r'Rest-auth/', include('rest_auth.urls')),
+    path(r'Rest-auth/',ConfirmEmailView.as_view(),name="view"),
+    url(r'RestUsers/register/', views.RestUserRegister.as_view(), name='rest_register'),
+    url(r'RestUsers/login/', views.Login.as_view(), name='rest_login'),
 ]
 

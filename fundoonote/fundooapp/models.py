@@ -15,9 +15,9 @@ class  UserProfile(models.Model):
 """Notes Model """
 class Notes(models.Model):
     # title field  contains the validators
-    title = models.CharField(max_length=400, validators=[validate_alphanumeric])
-    description = models.CharField(max_length=100, validators=[validate_alphabetical])
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField("Title",max_length=400, validators=[validate_alphanumeric])
+    description = models.CharField("Description",max_length=100, validators=[validate_alphabetical])
+    collaborator = models.ManyToManyField(User, related_name='notes')
     pub_date = models.DateTimeField(auto_now=True)
     remainder = models.DateTimeField(default=None, null=True, blank=True)
     is_archive = models.BooleanField(default=False)
@@ -36,10 +36,14 @@ class Notes(models.Model):
     def __str__(self):
         return self.title
 
+    objects = models.Manager()
+
 """ Label Models"""
 class Label(models.Model):
     text = models.CharField(max_length=100, validators=[validate_alphabetical])
     pub_date = models.DateTimeField(auto_now=True)
+    created_By = models.ForeignKey(User, related_name='label_created_by', on_delete=models.CASCADE)
+    note = models.ForeignKey(Notes, related_name='notes', on_delete=models.CASCADE, blank=True, null=True)
 
     # print string Format
     def __str__(self):
@@ -52,3 +56,4 @@ class AWSModel(models.Model):
 
     def __str__(self):
         return self.bucket_name
+

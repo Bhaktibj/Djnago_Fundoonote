@@ -59,8 +59,17 @@ INSTALLED_APPS = [
     'django.contrib.sites', # django site domain
     'django_elasticsearch_dsl',  # ElasticSearch DSL is a high level library which is use to writing the qu
     'django_elasticsearch_dsl_drf',
-
 ]
+
+NOTIFICATIONS_USE_JSONFIELD=True
+env = environ.Env(
+    SECRET_KEY=str,
+    DEBUG=(bool, False),
+    DATABASE_URL=str,
+    search_url =str,
+)
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 ACCOUNT_EMAIL_VERIFICATION = 'None'
 ACCOUNT_EMAIL_REQUIRED = True
 SITE_ID = 2
@@ -73,12 +82,6 @@ SITE_ID = 2
 # CELERY_RESULT_SERIALIZER = 'json'
 # CELERY_TIMEZONE = 'Asia/Shanghai'
 
-""" Elastic Search"""
-ELASTICSEARCH_DSL = {
-    'default': {
-        'hosts': 'localhost:9200'
-    },
-}
 REST_FRAMEWORK = {
 'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -134,12 +137,6 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 
 # Environment Variable
 
-env = environ.Env(
-    SECRET_KEY=str,
-    DEBUG=(bool, False),
-    DATABASE_URL=str,
-)
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 """ Redis cache """
 
@@ -151,6 +148,15 @@ CACHES = {
 
 DATABASES = {
     'default': env.db()
+}
+
+""" Elastic Search"""
+
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts':os.getenv('ELASTIC_SEARCH')
+    }
+
 }
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -191,14 +197,14 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 STATICFILES_DIRS = [STATIC_DIR]
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = 587
-DEFAULT_FROM_EMAIL = 'TestSite Team <bhaktibj402@gmail.com>'
+EMAIL_PORT = 587                    #DEFAULT_FROM_EMAIL = 'TestSite Team <bhaktibj402@gmail.com>'
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL = True
 
 """ Configuring the authentication classes """
 AUTHENTICATION_BACKENDS = [
@@ -208,6 +214,7 @@ AUTHENTICATION_BACKENDS = [
         'social_core.backends.github.GithubOAuth2',
 
 ]
+
 
 """ The LOGIN_REDIRECT_URL will be used to redirect the 
 user after authenticating from Django Login and Social Auth."""

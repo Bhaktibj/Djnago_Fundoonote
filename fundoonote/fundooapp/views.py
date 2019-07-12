@@ -21,6 +21,7 @@ from django_elasticsearch_dsl_drf.filter_backends import FilteringFilterBackend,
     DefaultOrderingFilterBackend, SearchFilterBackend, CompoundSearchFilterBackend, FunctionalSuggesterFilterBackend, \
     SuggesterFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
+from notify.mailer import send_email
 from rest_framework.generics import CreateAPIView, ListCreateAPIView
 from rest_framework import viewsets, generics, status
 
@@ -185,29 +186,43 @@ def get_users():
 
 
 #**********************************Curd Operation on Notes*************************** """
-
-class CreateNotes(APIView):
+# @method_decorator(app_login_required, name='dispatch')
+from django.core.mail import send_mail
+import json
+class CreateNotes(CreateAPIView):
     """This class View is used Create the Note using Post method"""
     serializer_class = NotesSerializer
-    def post(self, request):
+    def post(self, request,*args, **kwargs):
         res ={'message':"Something bad happened",
+              'data':{},
+              'mail_data':'Mail is not sent',
               'success': False}
         try:
-            notes = request.data
+            data = request.data
             # Create an Notes from the above data
-            serializer = NotesSerializer(data=notes)
+            serializer = NotesSerializer(data=data)
             if serializer.is_valid(raise_exception=True):
-                serializer.save()
+                serializer.save()  # save serializers
                 res['message']= "Successfully created note"
                 res['success']= True
-            return Response(res,status=status.HTTP_201_CREATED)
+                res['data']=serializer.data
+                res['mail_data']="Sent the mail successfully"# get serialize data
+                result = json.dumps(res)
+                send_mail(
+                    'Sending Note',
+                     result,
+                     request.user.email,
+                    ['admin@gmail.com'],
+                    fail_silently=False,
+                )
+            return Response(res,status=status.HTTP_201_CREATED) # created status_code 201
         except:
             return Response(res,status=status.HTTP_400_BAD_REQUEST)
 
 print("CreateNotes:",CreateNotes.__doc__)
 
 class NotesList(APIView):
-    """Display the list of Notes"""
+    """This class is used to Display the list of Notes"""
     def get(self,request):
        res = {'message': "Something bad happened",
               'data':{},
@@ -221,6 +236,7 @@ class NotesList(APIView):
             return Response(res, status=200) # return the data
        except:
               return Response(res, status=404) #if try block is False
+print("NoteList:",NotesList.__doc__)
 
 class NotesDetail(APIView):
     """ Display the details of list and store data into redis cache"""
@@ -245,7 +261,7 @@ class NotesDetail(APIView):
             return Response(res,status=404)
 
 class NotesDelete(APIView):
-    """ Delete the Note"""
+    """ This class is used to Delete the Note"""
     def delete(self, request, pk):
         res = {'message': "Something bad happened",
                'success': False}
@@ -260,6 +276,7 @@ class NotesDelete(APIView):
                 return Response("Note deleted =False,Please make note.deleted = True")
         except:
            return Response(res,status=404) # if try block is false
+print("NoteDelete:",NotesDelete.__doc__)
 
 class NotesUpdate(APIView):
     """ API endpoint that allows users to be viewed or edited."""
@@ -338,11 +355,12 @@ class ReminderNotes(APIView):
 
 # *****************************Curd Operations on label**********************************"""
 
-class CreateLabel(APIView):    # create label view using APIView
+class CreateLabel(CreateAPIView):    # create label view using APIView
     """ Create the Label View using post method"""
     serializer_class = LabelSerializer
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         res ={'message':"Something bad happened",
+              'data': {},
               'success': False}
         try:
             data = request.data
@@ -352,6 +370,7 @@ class CreateLabel(APIView):    # create label view using APIView
                 serializer.save()
                 res['message']= "Successfully created Label"
                 res['success']= True
+                res['data']=serializer.data
             return Response(res,status=status.HTTP_201_CREATED)
         except:
             return Response(res,status=status.HTTP_400_BAD_REQUEST)
@@ -410,7 +429,7 @@ class LabelUpdateDetail(APIView):
         try:
             label = Label.objects.get(pk=pk) # get the note
             data = request.data
-            serializer = LabelSerializer(label, data=data, partial=True)
+            serializer = LabelSerializer(label, data=data, partial=True,)
             if serializer.is_valid(raise_exception=True): # check the serializer is valid or not?
                 serializer.save() # if valid save
                 res[ 'message' ] = "Successfully Updated Label"
@@ -469,7 +488,7 @@ class LabelListPage(ListCreateAPIView):
     queryset = Label.objects.all()
 
 #*********************************Registration for User using Rest API******************************
-class RestUserRegister(APIView):
+class RestUserRegister(CreateAPIView):
     """
     this class is used for Register the rest User and create the JWT Token
      and store the token in redis cache
@@ -528,7 +547,7 @@ class RestUserRegister(APIView):
 
 
 #***********************************Rest Login for User***********************************
-class Login(APIView):
+class Login(CreateAPIView):
     """
     this class is used for login the rest and create the JWT Token
      and store the token in redis cache
@@ -536,48 +555,48 @@ class Login(APIView):
     # account and create the JWT token
     serializer_class = UserSerializer
     def post(self, request, *args, **kwargs):
-        try:
             response = {
                 "message": "something bad happened",
                 "data": {},
                 "success": False
             }
-            username = request.data['username']
-            password = request.data['password']
-            if password is None and username is None:
-                raise Exception("Username & password is required")
-            if username is None:                    # if username is None
-                raise Exception("Username is required") # raise exception Username is required
-            if password is None:
-                raise Exception("password is required")
-            user = authenticate(username=username, password=password) #validate the password
-            print('user-->', user)
-            if user:
-                if user.is_active:  # check if the user is active or not.
-                    payload = {'username': username, 'password': password}
-                    jwt_token = {
-                        'token': jwt.encode(payload, "Cypher", algorithm='HS256').decode('utf-8')
-                    }
-                    print(jwt_token)  # print JWT Token
-                    """ JWT token stored in cache"""
-                    token = jwt_token['token']
-                    r.set_value("p3", token) # set the token in redis cache
-                    token_val = r.get_value("p3") # get the value of token from cache
-                    print("Display The Tokens using get_token()")
-                    print(token_val)# print the cache token
-                    print("Display the length of Token")
-                    len_str = r.length_str("p3")
-                    print(len_str) # returns the length of token
-                    response['message'] = "Logged in Successfully"
-                    response['data'] = token
-                    response['success'] = True
-                    return Response(response)  # if active then return response with jWT Token
-                else:
-                    return Response(response) # else user is not active
-            if user is None:
-                return Response(response)  # else user is not exist
-        except:
-            return Response(response) # print response as is
+            try:
+                username = request.data['username']
+                password = request.data['password']
+                if password is None and username is None:
+                    raise Exception("Username & password is required")
+                if username is None:                    # if username is None
+                    raise Exception("Username is required") # raise exception Username is required
+                if password is None:
+                    raise Exception("password is required")
+                user = authenticate(username=username, password=password) #validate the password
+                print('user-->', user)
+                if user:
+                    if user.is_active:  # check if the user is active or not.
+                        payload = {'username': username, 'password': password}
+                        jwt_token = {
+                            'token': jwt.encode(payload, "Cypher", algorithm='HS256').decode('utf-8')
+                        }
+                        print(jwt_token)  # print JWT Token
+                        """ JWT token stored in cache"""
+                        token = jwt_token['token']
+                        r.set_value("p3", token) # set the token in redis cache
+                        token_val = r.get_value("p3") # get the value of token from cache
+                        print("Display The Tokens using get_token()")
+                        print(token_val)# print the cache token
+                        print("Display the length of Token")
+                        len_str = r.length_str("p3")
+                        print(len_str) # returns the length of token
+                        response['message'] = "Logged in Successfully"
+                        response['data'] = token
+                        response['success'] = True
+                        return Response(response)  # if active then return response with jWT Token
+                    else:
+                        return Response(response) # else user is not active
+                if user is None:
+                    return Response(response)  # else user is not exist
+            except:
+                return Response(response) # print response as is
 
 
 # ***************************************S3 AWS Implementation***************************
@@ -588,20 +607,19 @@ class create_aws_bucket(CreateAPIView):
     def post(self, request, *args, **kwargs):
         res = {"message": "something bad happened",
                 "success": False}
-        bucket_name = request.data['bucket_name']  # getting the username
-        region = request.data['region']
-        if boto.bucket_exists(bucket_name):
-            return Response("Bucket is already exist")
-        else:
+        try:
+            bucket_name = request.data['bucket_name']  # getting the username
+            region = request.data['region']
             aws = AWSModel.objects.create(bucket_name=bucket_name, region=region)
-            aws.save()
-        # Create a bucket in a specified region
             if boto.create_bucket(bucket_name=bucket_name, region=region):
-                logging.info(f'Created bucket {bucket_name} '
-                        f'in region {region}')
+                logging.info('Created bucket {bucket_name} '
+                             'in region {region}')
                 res[ 'message' ] = "Bucket Is Created Successfully...",
                 res[ 'success' ] = True,
+                aws.save()
             return Response(res)
+        except:
+            return Response("error")
 
 #***************************************Delete Buckets********************************
 class delete_aws_bucket(APIView):
@@ -613,7 +631,7 @@ class delete_aws_bucket(APIView):
             bucket = AWSModel.objects.get(pk=pk) # check pk value
             bucket.delete()  # call delete function
             if boto.delete_bucket(bucket.bucket_name):
-                logging.info(f'{bucket.bucket_name} was deleted')
+                logging.info('{bucket.bucket_name} was deleted')
                 res[ 'message' ] = "Bucket Is Deleted Successfully",
                 res[ 'success' ] = True,
             return Response(res,status=200)
