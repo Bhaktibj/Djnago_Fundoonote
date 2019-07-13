@@ -196,6 +196,7 @@ class CreateNotes(CreateAPIView):
         res ={'message':"Something bad happened",
               'data':{},
               'mail_data':'Mail is not sent',
+              'total_mail':0,
               'success': False}
         try:
             data = request.data
@@ -205,16 +206,22 @@ class CreateNotes(CreateAPIView):
                 serializer.save()  # save serializers
                 res['message']= "Successfully created note"
                 res['success']= True
-                res['data']=serializer.data
+                res[ 'data' ] = serializer.data
+                result = json.dumps(res) # convert the json data into string format
+                mail_count = 0  # mail count =0
+                for i in serializer.data['collaborator']: # take the collaborator list
+                    user = User.objects.get(id=i)
+                    if user:
+                            send_mail(
+                            'Sending Note',
+                            result,
+                            request.user.email,
+                            [str(user.email)],
+                            fail_silently=False,
+                            )
+                    mail_count +=1
                 res['mail_data']="Sent the mail successfully"# get serialize data
-                result = json.dumps(res)
-                send_mail(
-                    'Sending Note',
-                     result,
-                     request.user.email,
-                    ['admin@gmail.com'],
-                    fail_silently=False,
-                )
+                res['total_mail']=mail_count
             return Response(res,status=status.HTTP_201_CREATED) # created status_code 201
         except:
             return Response(res,status=status.HTTP_400_BAD_REQUEST)
@@ -246,16 +253,19 @@ class NotesDetail(APIView):
                'success': False}
         try:
             note = get_object_or_404(Notes, pk=pk)
-            data = NotesSerializer(note).data
-            dict_data = pickle.dumps(data)  # dump the file
-            r.set_value('dict', dict_data) # stored the value into key
-            print("set data")
-            read_dict = r.get_value('dict')  # read the value
-            data1 = pickle.loads(read_dict)  # loads data disk into data1
-            print(data1)
-            res[ 'message' ] = "Successfully display the note"
-            res[ 'success' ] = True
-            res[ 'data' ] = data
+            if note.pin == True:
+                data = NotesSerializer(note).data
+                dict_data = pickle.dumps(data)  # dump the file
+                r.set_value('dict', dict_data) # stored the value into key
+                print("set data")
+                read_dict = r.get_value('dict')  # read the value
+                data1 = pickle.loads(read_dict)  # loads data disk into data1
+                print(data1)
+                res[ 'message' ] = "Successfully display the note"
+                res[ 'success' ] = True
+                res[ 'data' ] = data
+            else:
+                return Response("Please First make the note.pin is true and pin the note")
             return Response(res, status=200)
         except:
             return Response(res,status=404)
@@ -344,8 +354,9 @@ class ReminderNotes(APIView):
             if note.remainder == None: # Check reminder is set or not
                 note.remainder =note.pub_date # if none then set pub_date
                 note.save() # save the note
-                res[ 'message' ] = "Successfully Trash the note"
+                res[ 'message' ] = "Successfully Set Reminder note"
                 res[ 'success' ] = True
+
             else:
                 return Response("Already reminder is set") # if set
             return Response(res, status=200)
@@ -452,7 +463,6 @@ class LabelDelete(APIView):
             return Response(res,status=200)
         except:
             return Response(res,status=404) # if try block is false
-
 
 #**************************************Pagination View *******************************************"""
 class CustomPagination(PageNumberPagination):
@@ -611,12 +621,12 @@ class create_aws_bucket(CreateAPIView):
             bucket_name = request.data['bucket_name']  # getting the username
             region = request.data['region']
             aws = AWSModel.objects.create(bucket_name=bucket_name, region=region)
+            aws.save()
             if boto.create_bucket(bucket_name=bucket_name, region=region):
                 logging.info('Created bucket {bucket_name} '
                              'in region {region}')
                 res[ 'message' ] = "Bucket Is Created Successfully...",
                 res[ 'success' ] = True,
-                aws.save()
             return Response(res)
         except:
             return Response("error")
@@ -648,6 +658,26 @@ class Bucket_List(APIView):
             return Response(data) # return Response
         except:
             return Response("invalid or empty")
+
+
+# class Upload_image(APIView):
+#     """ create bucket using boto3 services method"""
+#     def post(self,request, pk):
+#         try:
+#             note = Notes.objects.get(pk=pk) # get the note
+#             image = request.FILES['image']
+#             image_name = image.name
+#             val = imghdr.what(image)
+#             if val:
+#                 note.image =image
+#                 s3 = boto3.client('s3')
+#                 bucket_name = "django_s3_assets1"
+#                 s3.upload_file(Bucket=bucket_name,Key=image_name,Body=image)
+#                 return Response("Upload Image")
+#         except:
+#             return ("cant upload")
+
+
 
 
 #**************************************S3 Upload files*******************************

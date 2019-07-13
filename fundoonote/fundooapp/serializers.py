@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer): # serializer is used to conve
     class Meta:
         model = User
         password = serializers.CharField(style={'input_type': 'password'})
-        fields = ('url','username','password')
+        fields = ('url','username','password','email')
 
 class NotesSerializer(serializers.ModelSerializer):
     """ Notes Serializer"""
