@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import environ
 from decouple import config
+import logging
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
@@ -23,6 +24,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT =  os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
+# logger setting
+logging.basicConfig(format='%(process)d-%(levelname)s-%(message)s',level=logging.INFO)
+logging.warning('This is a Warning')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -84,8 +88,8 @@ SITE_ID = 2
 
 REST_FRAMEWORK = {
 'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+         'rest_framework.permissions.IsAuthenticated',
+     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication', #Token Authentication
         'rest_framework_simplejwt.authentication.JWTAuthentication',# JWT Token
@@ -203,7 +207,6 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587                    #DEFAULT_FROM_EMAIL = 'TestSite Team <bhaktibj402@gmail.com>'
-EMAIL_USE_TLS=True
 EMAIL_USE_SSL = True
 
 """ Configuring the authentication classes """

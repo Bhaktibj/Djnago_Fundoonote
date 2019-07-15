@@ -32,12 +32,14 @@ urlpatterns = [
     path(r'Label/Create/', views.CreateLabel.as_view(), name="label_create"),
     path(r'Label/Delete/<int:pk>/', views.LabelDelete.as_view(), name='delete_label'),
     path(r'Label/Pagination/',views.LabelListPage.as_view(), name="label_page"),
+    path(r'note_label/<int:pk>/', views.LabelFromNotes.as_view(), name="label_page"),
 
     # List of the AWS bucket url
-    path(r'bucket_aws/create/', views.create_aws_bucket.as_view(), name='create_bucket'),
-    path(r'bucket_aws/delete/<int:pk>/', views.delete_aws_bucket.as_view(), name='delete_bucket'),
-    path(r'bucket_aws/List/', views.Bucket_List.as_view(), name="bucket_list"),
-    path(r'upload/', views.upload_s3, name="upload"),
+    path(r'aws/create/', views.create_aws_bucket.as_view(), name='create_bucket'),
+    path(r'aws/delete/<int:pk>/', views.delete_aws_bucket.as_view(), name='delete_bucket'),
+    path(r'aws/List/', views.Bucket_List.as_view(), name="bucket_list"),
+    path(r'aws/upload_s3/<int:pk>/', views.s3_upload, name='upload_image'),
+
 
     # search operations url
     path(r'Search/user/', views.UserListView.as_view(), name="user"),
@@ -46,7 +48,7 @@ urlpatterns = [
 
     path(r'Rest-auth/', include('rest_auth.urls')),
     path(r'Rest-auth/',ConfirmEmailView.as_view(),name="view"),
-    url(r'RestUsers/register/', views.RestUserRegister.as_view(), name='rest_register'),
-    url(r'RestUsers/login/', views.Login.as_view(), name='rest_login'),
+    path(r'RestUsers/register/', views.RestUserRegister.as_view(), name='rest_register'),
+    path(r'RestUsers/login/', views.Login.as_view(), name='rest_login'),
 ]
 

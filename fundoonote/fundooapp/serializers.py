@@ -45,7 +45,6 @@ class AWSModelSerializer(serializers.ModelSerializer):
     """ This Serializer is used to create and delete  bucket"""
     bucket_name = serializers.CharField(max_length=30)
     region = serializers.CharField(max_length=100)
-
     class Meta:
         model= AWSModel
         fields = ('id','bucket_name','region')
