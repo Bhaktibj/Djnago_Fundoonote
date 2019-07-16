@@ -828,6 +828,7 @@ class Bucket_List(APIView):
             log.error("Empty list")
             return Response("invalid or empty")
 
+#*******************************************Upload_S3 profile************************************
 @csrf_exempt
 def s3_upload(request,pk):
     response = {
