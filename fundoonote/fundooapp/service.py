@@ -18,7 +18,6 @@ class BotoService:
             return False  #True if the referenced bucket, otherwise False
         return True
 
-
     def delete_bucket(self,bucket_name):
         """ This method is used to create the AWS bucket"""
         # Delete the bucket
@@ -30,17 +29,18 @@ class BotoService:
             return False  #True if the referenced bucket was deleted, otherwise False
         return True
 
-    def bucket_exists(self, bucket_name):
-        """Determine whether bucket_name exists and the user has permission to access it
+    def list_bucket_objects(self,bucket_name):
+        """List the objects in an Amazon S3 bucket
         """
+        # Retrieve the list of bucket objects
+        s3 = boto3.client('s3')
         try:
-            self.s3.head_bucket(Bucket=bucket_name)  # bucket_name: string
+            response = s3.list_objects_v2(Bucket=bucket_name)
         except ClientError as e:
-            logging.debug(e)
-            return False  # True if the referenced bucket_name exists, otherwise False
-        return True
-
-
+            # AllAccessDisabled error == bucket not found
+            logging.error(e)
+            return None
+        return response[ 'Contents' ]
 
 # *************************************************************************************
 

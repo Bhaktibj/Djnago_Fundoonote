@@ -26,7 +26,6 @@ MEDIA_URL = '/media/'
 
 # logger setting
 logging.basicConfig(format='%(process)d-%(levelname)s-%(message)s',level=logging.INFO)
-logging.warning('This is a Warning')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -87,15 +86,15 @@ SITE_ID = 2
 # CELERY_TIMEZONE = 'Asia/Shanghai'
 
 REST_FRAMEWORK = {
-'DEFAULT_PERMISSION_CLASSES': (
-         'rest_framework.permissions.IsAuthenticated',
-     ),
+# 'DEFAULT_PERMISSION_CLASSES': (
+#          'rest_framework.permissions.IsAuthenticated',
+#      ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication', #Token Authentication
         'rest_framework_simplejwt.authentication.JWTAuthentication',# JWT Token
         'rest_framework.authentication.SessionAuthentication',
     ),
-    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+    # 'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
 

@@ -1,8 +1,3 @@
-import imghdr
-
-from boto3.s3.inject import upload_file
-from django.conf.locale import es
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404
 from django.urls import reverse
@@ -13,7 +8,6 @@ from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes, force_text
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import UpdateView
 from django_elasticsearch_dsl_drf.constants import LOOKUP_FILTER_RANGE, LOOKUP_QUERY_IN, LOOKUP_QUERY_GT, \
     LOOKUP_QUERY_GTE, LOOKUP_QUERY_LT, LOOKUP_QUERY_LTE, SUGGESTER_TERM, SUGGESTER_PHRASE, SUGGESTER_COMPLETION, \
     FUNCTIONAL_SUGGESTER_COMPLETION_PREFIX
@@ -21,7 +15,6 @@ from django_elasticsearch_dsl_drf.filter_backends import FilteringFilterBackend,
     DefaultOrderingFilterBackend, SearchFilterBackend, CompoundSearchFilterBackend, FunctionalSuggesterFilterBackend, \
     SuggesterFilterBackend
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
-from notify.mailer import send_email
 from rest_framework.generics import CreateAPIView, ListCreateAPIView
 from rest_framework import viewsets, generics, status
 
@@ -44,12 +37,11 @@ from rest_framework.pagination import PageNumberPagination, LimitOffsetPaginatio
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 import jwt
-import logging
 from .service import BotoService
-import os
 import boto3
-from boto3.s3.transfer import S3Transfer
 from .decorators import app_login_required
+from django.core.mail import send_mail
+import json
 
 
 r = redis_methods()
@@ -303,8 +295,7 @@ class Login(CreateAPIView):
 
 
 #**********************************Curd Operation on Notes*****************************************
-from django.core.mail import send_mail
-import json
+
 class CreateNotes(CreateAPIView):
     """This class View is used Create the Note using Post method"""
     serializer_class = NotesSerializer
@@ -315,35 +306,47 @@ class CreateNotes(CreateAPIView):
               'total_mail':0,
               'success': False}
         try:
-            data = request.data
+            print("***************************************************************")
+            log.info("Enter the Try block") # try block
+            log.info("Request the data")
+            data = request.data         # request the user data
             # Create an Notes from the above data
-            serializer = NotesSerializer(data=data)
-            if serializer.is_valid(raise_exception=True):
+            log.info("serialize the data")
+            serializer = NotesSerializer(data=data) # serialize the data
+            log.info("validation of serializer")
+            if serializer.is_valid(raise_exception=True): # check the serializer is valid or not
+                log.info("save the serializer")
                 serializer.save()  # save serializers
                 res['message']= "Successfully created note"
                 res['success']= True
                 res[ 'data' ] = serializer.data
-                result = json.dumps(res) # convert the json data into string format
+                log.info("dumps the json data into string")
+                note_data = json.dumps(res) # convert the json data into string format
                 mail_count = 0  # mail count =0
+                log.info("taking the collaborator field")
                 for i in serializer.data['collaborator']: # take the collaborator list
                     user = User.objects.get(id=i) # take the user
                     if user:
                             send_mail(          # user then send the mail
-                            'Sending Note',
-                            result,
+                            'Sending Note to the user',
+                            note_data,
                             request.user.email,
                             [str(user.email)],
                             fail_silently=False,
                             )
+                    log.info("count the mail")
                     mail_count +=1
                 res['mail_data']="Sent the mail successfully"# get serialize data
                 res['total_mail']=mail_count
+                log.info("Return the response")
             return Response(res,status=status.HTTP_201_CREATED) # created status_code 201
         except:
+            log.error("Return the error")
             return Response(res,status=status.HTTP_400_BAD_REQUEST)
 
 print("CreateNotes:",CreateNotes.__doc__)
 
+#****************************************List of  the Notes ****************************************
 class NotesList(APIView):
     """This class is used to Display the list of Notes"""
     def get(self,request):
@@ -366,18 +369,19 @@ class NotesList(APIView):
               return Response(res, status=404) #if try block is False
 print("NoteList:",NotesList.__doc__)
 
+#**************************************Display the specific note********************************
 class NotesDetail(APIView):
     """ Display the details of list and store data into redis cache"""
-    def get(self, request, pk):
+    def get(self,request, pk):
         res = {'message': "Something bad happened",
                'data': {},
                'success': False}
         try:
-            print("*********************************************")
+            print("***************************************************************")
             log.info("select the object")
             note = get_object_or_404(Notes, pk=pk)
             log.info("check the note.pin is true or what")
-            if note.pin == True:
+            if note.pin is True:
                 log.info("serialize the data")
                 data = NotesSerializer(note).data
                 dict_data = pickle.dumps(data)  # dump the file
@@ -399,17 +403,18 @@ class NotesDetail(APIView):
             log.error("not not found")
             return Response(res,status=404)
 
+#************************************************Delete the note************************************
 class NotesDelete(APIView):
     """ This class is used to Delete the Note"""
     def delete(self, request, pk):
         res = {'message': "Something bad happened",
                'success': False}
         try:
-            print("*********************************")
+            print("***************************************************************")
             log.info("get the specific note")
             note = Notes.objects.get(pk=pk) # check pk value
             log.info("If note.deleted ==true")
-            if note.deleted == True:
+            if note.deleted is True:
                 note.delete()  # if true then delete
                 res[ 'message' ] = "Successfully deleted the note"
                 res[ 'success' ] = True
@@ -423,6 +428,7 @@ class NotesDelete(APIView):
            return Response(res,status=404) # if try block is false
 print("NoteDelete:",NotesDelete.__doc__)
 
+#********************************************update the note***************************************
 class NotesUpdate(APIView):
     """ API endpoint that allows users to be viewed or edited."""
     serializer_class = NotesSerializer
@@ -432,7 +438,7 @@ class NotesUpdate(APIView):
                'data':{},
                'success': False}
         try:
-            print("*********************************")
+            print("***************************************************************")
             log.info("get the specific note")
             note = Notes.objects.get(pk=pk) # get the note
             log.info("request the data")
@@ -452,16 +458,18 @@ class NotesUpdate(APIView):
             log.error("Note is not found")
             return Response(res, status=404)
 
+# *********************************************Trash the note***********************************
 class TrashView(APIView):
     """ Trash the Note"""
     def get(self,request,pk):
         res = {'message': "Something bad happened",
                'success': False}
         try:                  # try block
+            print("***************************************************************")
             log.info("Enter the try block and select the note")
             note = Notes.objects.get(pk=pk)
             log.info("if note is deleted the trash the note")
-            if note.trash == False and note.deleted == True: # check trash and delete field
+            if note.trash is False and note.deleted is True: # check trash and delete field
                 note.trash = True # if trash = false
                 log.info("note is save")
                 note.save()
@@ -473,17 +481,19 @@ class TrashView(APIView):
             log.error("Note not found")
             return Response(res, status=404) # except block
 
+# **************************************************Archive the notes*******************************
 class ArchiveNotes(APIView):
     """ Archive The Note"""
     def get(self,request,pk):
         res = {'message': "Something bad happened",
                'success': False}
         try:
+            print("***************************************************************")
             log.info("enter the try block")
             note = Notes.objects.get(pk=pk)
             log.info("if note is not deleted the archive the note otherwise no")
             if note.deleted == False and note.trash == False:
-                if note.is_archive == False: # Check if trash is false or true
+                if note.is_archive is False: # Check if trash is false or true
                     log.warning("note is archive is false then set archive ==true")
                     note.is_archive = True # if false then set True
                     note.save() # save the note
@@ -500,16 +510,17 @@ class ArchiveNotes(APIView):
         except:
             log.error("note is not found")
             return Response(res,status=404)
-
+#***********************************************set reminder to note*****************************
 class ReminderNotes(APIView):
     """ set Reminder for Note The Note"""
     def get(self,request,pk):
         res = {'message': "Something bad happened",
                'success': False}
         try:
+            print("***************************************************************")
             log.info("Enter the try block")
             note = Notes.objects.get(pk=pk)
-            if note.remainder == None: # Check reminder is set or not
+            if note.remainder is None: # Check reminder is set or not
                 note.remainder =note.pub_date # if none then set pub_date
                 note.save() # save the note
                 data = NotesSerializer(note).data  # serialize the object
@@ -518,8 +529,8 @@ class ReminderNotes(APIView):
                 send_mail(  # user then send the mail
                     'Sending Note',
                     "Sending Notification successfully",
-                    request.user.email,
-                    [ str(user.email) ],
+                    request.user.email,  # from current logged user
+                    [ str(user.email) ], # to address who are created the note
                     fail_silently=False,
                 )
                 res[ 'message' ] = "Successfully Set Reminder note"
@@ -527,14 +538,13 @@ class ReminderNotes(APIView):
 
             else:
                 return Response("Already reminder is set") # if set
-            return Response(res, status=200)
+            return Response(res, status=200)  # return the Ok response
         except:
-            return Response(res, status=404)
-
+            return Response(res, status=404) # return the not found response
 
 # *****************************Curd Operations on label**************************************************"""
 
-class CreateLabel(CreateAPIView):    # create label view using APIView
+class CreateLabel(CreateAPIView):
     """ Create the Label View using post method"""
     serializer_class = LabelSerializer
     def post(self, request, *args, **kwargs):
@@ -542,24 +552,25 @@ class CreateLabel(CreateAPIView):    # create label view using APIView
               'data': {},
               'success': False}
         try:
+            print("***************************************************************")
             log.info("enter the try block")
-            data = request.data
-            # Create an from from the above data
+            data = request.data   # request the data
             log.info("serialize the data")
-            serializer = LabelSerializer(data=data)
+            serializer = LabelSerializer(data=data) # validate the request data
             log.info("check if serializer is valid or not")
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
+            if serializer.is_valid(raise_exception=True): # if serializer is valid
+                serializer.save()                         # save serializer
                 res['message']= "Successfully created Label"
                 res['success']= True
                 res['data']=serializer.data
                 log.info("return the response")
-            return Response(res,status=status.HTTP_201_CREATED)
+            return Response(res,status=status.HTTP_201_CREATED) # return accept response
         except:
             log.info("enter the except block")
             log.error("label is not created")
-            return Response(res,status=status.HTTP_400_BAD_REQUEST)
+            return Response(res,status=status.HTTP_400_BAD_REQUEST) # return bad response
 
+# ******************************************list the label**************************************
 class LabelList(APIView):
     """ Display the List of labels"""
     def get(self,request):
@@ -567,10 +578,11 @@ class LabelList(APIView):
                'data': {},
                'success': False}
         try:
+            print("***************************************************************")
             log.info("Enter the try block")
             label = Label.objects.all()
             log.info("serialize the object")
-            data = LabelSerializer(label, many=True).data
+            data = LabelSerializer(label, many=True).data # getting the specific label
             """ Stored the data into redis cache"""
             dict_data = pickle.dumps(data)  # dump the data pickle into dictionary
             r.set_value('dict', dict_data)  # store the data into key value
@@ -583,12 +595,12 @@ class LabelList(APIView):
             res[ 'success' ] = True
             res['data'] = data
             log.info("return positive response")
-            return Response(res, status=200)
+            return Response(res, status=200) # return the Ok response
         except:
-            log.info("Enter the except block")
+            log.info("Enter the except block") # return the not found response
             log.error("Empty list")
             return Response(res, status=404)
-
+#******************************************Update and detail the note******************************
 class LabelUpdateDetail(APIView):
     """ Display the detail of label and Updated """
     serializer_class = LabelSerializer
@@ -597,6 +609,7 @@ class LabelUpdateDetail(APIView):
                'data': {},
                'success': False}
         try:
+            print("***************************************************************")
             log.info("Enter the try block")
             label = get_object_or_404(Label, pk=pk)
             log.info("Serialize the object")
@@ -617,13 +630,14 @@ class LabelUpdateDetail(APIView):
         except:
             log.info("Enter the try block")
             log.error("label is not found")
-            return Response(res, status=404)
+            return Response(res, status=404) # return the not found response
 
     def put(self,request, pk, ):
         res = {'message': "Something bad happened",
                'data': {},
                'success': False}
         try:
+            print("***************************************************************")
             log.info("Enter the try block")
             label = Label.objects.get(pk=pk) # get the note
             log.info("request the data")
@@ -636,17 +650,19 @@ class LabelUpdateDetail(APIView):
                 res[ 'success' ] = True
                 res[ 'data' ] = serializer.data
                 log.info("Return the Response")
-                return Response(res, status=200)
+                return Response(res, status=200) # return the Ok response
         except:
             log.error('label is not found')
-            return Response(res,status=400)
+            return Response(res,status=400) # return the not found  response
 
+#****************************************Delete the specific note************************************************
 class LabelDelete(APIView):
     """ Delete particular label"""
     def delete(self, request, pk):  # delete the labels using pk
         res = {'message': "Something bad happened",
                'success': False}
         try:
+            print("***************************************************************")
             label = Label.objects.get(pk=pk) # check pk value
             label.delete()  # call delete function
             res[ 'message' ] = "Successfully deleted Label"
@@ -665,6 +681,7 @@ class CustomPagination(PageNumberPagination):
 
     def get_paginated_response(self, data):
         try:
+            print("***************************************************************")
             log.info("Provide the data ")
             return Response({
                 'links': {
@@ -699,6 +716,7 @@ class LabelFromNotes(APIView):
                'data':{},
                'success': False}
         try:
+            print("***************************************************************")
             log.info("Enter the Try block")
             note = Notes.objects.get(pk=pk) # getting specific note object
             log.info("Serialize the note object")
@@ -730,7 +748,7 @@ class LabelFromNotes(APIView):
             return Response(res,status=404) # if try block is false
 
 
-# ***************************************S3 AWS Implementation***************************
+# ***************************************S3 AWS Implementation*************************************
 class create_aws_bucket(CreateAPIView):
     """ create bucket using boto3 services method"""
     serializer_class = AWSModelSerializer
@@ -738,11 +756,14 @@ class create_aws_bucket(CreateAPIView):
     def post(self, request, *args, **kwargs):
         res = {"message": "something bad happened",
                 "success": False}
-        try:
+        try:                              # enter try block
+            print("***************************************************************")
             log.info("Enter the try block")
             log.info("request the bucket_name")
-            bucket_name = request.data['bucket_name']
-            log.info("request the region")
+            bucket_name = request.data['bucket_name']  # request the bucket_name
+            if bucket_name is None:
+                raise Exception("Bucket name must be unique")
+            log.info("request the region")             # bucket name must be unique
             region = request.data['region']
             log.info("Create the aws bucket")
             aws = AWSModel.objects.create(bucket_name=bucket_name, region=region)
@@ -767,22 +788,27 @@ class delete_aws_bucket(APIView):
         res = {"message": "something bad happened",
                "success": False}
         try:
+            print("***************************************************************")
             log.info("Enter the try block")
             bucket = AWSModel.objects.get(pk=pk) # check pk value
             log.info("Getting the bucket id from restapi")
-            bucket.delete()  # call delete function
-            log.info("deleted the bucket")
-            if bucket.delete()== True:
-                log.info("if delete the bucket from rest api then")
-                log.info("call the aws delete bucket function")
-                if boto.delete_bucket(bucket.bucket_name):
-                    logging.info('{bucket.bucket_name} was deleted')
-                    res[ 'message' ] = "Bucket Is Deleted Successfully",
-                    res[ 'success' ] = True,
-                    log.info("Return the Response")
-                return Response(res,status=200)
+            data = AWSModelSerializer(bucket).data  # serialize the object
+            bucket_name = data[ 'bucket_name' ]
+            log.info("call listing object function")
+            objects = boto.list_bucket_objects(bucket_name) # listing object from bucket function
+            if objects is not None:   # if objects is not none
+                return Response("Bucket is not empty") # return response please make the bucket is empty
+            else:
+                if bucket.delete():        # if bucket is deleted then
+                    log.info("call the aws delete bucket function")
+                    if boto.delete_bucket(bucket_name):       # delete the bucket from AWS
+                        logging.info('{bucket_name} was deleted')
+                        res[ 'message' ] = "Bucket Is Deleted Successfully",
+                        res[ 'success' ] = True,
+                        log.info("Return the Response")
+                return Response(res,status=200)  # return the response
         except:
-            log.error("Invalid function")
+            log.error("Invalid function")  # Return the bad response
             return Response(res)
 
 #**************************************List of the Buckets*****************************************
@@ -790,11 +816,12 @@ class Bucket_List(APIView):
     """display all the buckets in Rest API"""
     def get(self,request):
         try:
-            log.info("Enter the try block")
+            print("***************************************************************")
+            log.info("Enter the try block")  # enter the try block
             log.info("select all object")
             bucket = AWSModel.objects.all() # select the object
             log.info("Serialize the object")
-            data = AWSModelSerializer(bucket, many=True).data
+            data = AWSModelSerializer(bucket, many=True).data  # serialize the objects
             log.info("Return the response")
             return Response(data) # return Response
         except:
@@ -803,7 +830,14 @@ class Bucket_List(APIView):
 
 @csrf_exempt
 def s3_upload(request,pk):
+    response = {
+        'message':'Bad request or empty file can not be uploaded',
+        'success' : False,
+        'status_code' :400,
+        'bucket_name':''
+    }
     try:
+        print("***************************************************************")
         log.info("Enter the try block")
         log.info("request the post method")
         if request.method == 'POST':
@@ -817,28 +851,25 @@ def s3_upload(request,pk):
             uploaded_file = request.FILES.get('document')
             log.info("if uploaded file name is None")
             if uploaded_file is None:
-                message = "Empty file can not be uploaded"
-                status_code = 400
-                log.warning("Uploaded file is none ")
-                return JsonResponse({'message': message, 'status': status_code})
+                return JsonResponse(response)
             else:
                 log.info("set the file name")
-                file_name = 'image2.jpg'
+                file_name = 'image.jpeg'
                 log.info("call the boto3 object")
                 s3_client = boto3.client('s3')
                 log.info("upload the image")
                 s3_client.upload_fileobj(uploaded_file, bucket_name, Key=file_name)
-                message = "Image successfully uploaded"
-                status_code = 200 # success msg
+                response['message'] = "Image successfully uploaded"
+                response['status_code'] = 200
+                response['success'] = True
+                response['bucket_name']= bucket_name
                 log.info("Return the Response ")
-                return JsonResponse({'message': message, 'status': status_code, 'bucket_name':bucket_name})
+                return JsonResponse(response)
         else:
             log.info("return the bad response")
-            status_code = 400 # bad request
-            message = "The request is not valid."
-            return JsonResponse({'message': message, 'status': status_code, 'bucket_name':''})
-    except RuntimeError:
-        print(" ")
+            return JsonResponse(response)
+    except:
+        return JsonResponse(response)
 
 
 #**************************************ElasticSearch Implementation ******************
@@ -918,6 +949,7 @@ class TrashList(generics.ListAPIView):
 
 class ArchiveList(generics.ListAPIView): # use teh ListApi view
     """ List Archive note using django filter backend"""
+    log.info("List of the archive notes")
     queryset = Notes.objects.all()  # select all objects
     serializer_class = NotesSerializer # serializer class
     log.info("loading the django_filter backend")
@@ -926,6 +958,7 @@ class ArchiveList(generics.ListAPIView): # use teh ListApi view
 
 class UserListView(generics.ListAPIView):
     """Search the user using django backend search filter"""
+    log.info("List of the users based on username, id fields notes")
     queryset = User.objects.all() # select all object
     serializer_class = UserSerializer # user serializer
     filter_backends = (filters.SearchFilter,) # use the backend filter

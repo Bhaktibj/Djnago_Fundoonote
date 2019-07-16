@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 # Regex validators
 validate_alphanumeric = RegexValidator(r'^[a-zA-Z0-9]*$', 'Only alphanumeric characters are allowed.')
 validate_alphabetical = RegexValidator('^[a-zA-Z]', 'Only Alphabetical Characters are allowed.')
+validate_alphanumeric1 = RegexValidator('^ap-[a-z]*-[0-9]{1}','Please follow the region format.')
 
 # this model is used for RestRegister
 class  UserProfile(models.Model):
@@ -49,12 +50,10 @@ class Notes(models.Model):
     def __str__(self):
         return self.title
 
-    objects = models.Manager()
-
 """ AWS Models"""
 class AWSModel(models.Model):
-    bucket_name = models.CharField(max_length=100, unique=True)
-    region = models.CharField(max_length=100)
+    bucket_name = models.CharField(max_length=100, unique=True) # bucket name must be unique
+    region = models.CharField(max_length=100,validators=[validate_alphanumeric1]) # 'ap-south-1'
 
     def __str__(self):
         return self.bucket_name

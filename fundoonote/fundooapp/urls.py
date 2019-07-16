@@ -37,7 +37,7 @@ urlpatterns = [
     # List of the AWS bucket url
     path(r'aws/create/', views.create_aws_bucket.as_view(), name='create_bucket'),
     path(r'aws/delete/<int:pk>/', views.delete_aws_bucket.as_view(), name='delete_bucket'),
-    path(r'aws/List/', views.Bucket_List.as_view(), name="bucket_list"),
+    path(r'aws/list/', views.Bucket_List.as_view(), name="bucket_list"),
     path(r'aws/upload_s3/<int:pk>/', views.s3_upload, name='upload_image'),
 
 

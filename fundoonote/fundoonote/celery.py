@@ -16,6 +16,7 @@ app.autodiscover_tasks()
 app.config_from_object('django.conf:settings')
 # RabbitMQ is a message broker
 app = Celery('fundooapp',
+             # RABBIT_MQ = 'amqp://bhakti:bhakti123@localhost/bhakti_vhost'
              broker=os.getenv('RABBIT_MQ'),
              backend='rpc://',
              include=['fundooapp.tasks'])
