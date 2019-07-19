@@ -11,7 +11,7 @@ number_of_replicas : It provides high availability in case a shard/node fails.
 
 """
 """ Create the Index """
-note_index = Index('notes')
+note_index = Index('NOTES')
 note_index.settings(
     number_of_shards=1,
     number_of_replicas=1

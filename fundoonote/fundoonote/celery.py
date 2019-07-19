@@ -11,18 +11,35 @@ app = Celery('fundoonote')
 
 # load task modules from all django app config.
 # app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
-app.autodiscover_tasks()
 
 app.config_from_object('django.conf:settings')
 # RabbitMQ is a message broker
 app = Celery('fundooapp',
-             # RABBIT_MQ = 'amqp://bhakti:bhakti123@localhost/bhakti_vhost'
-             broker=os.getenv('RABBIT_MQ'),
+             broker='amqp://bhakti:bhakti123@localhost/bhakti_vhost',
+             # broker=os.getenv('RABBIT_MQ'),
              backend='rpc://',
              include=['fundooapp.tasks'])
+
+app.conf.update(
+    CELERY_DEFAULT_QUEUE = "myapp",
+    CELERY_DEFAULT_EXCHANGE = "myapp",
+    CELERY_DEFAULT_EXCHANGE_TYPE = "direct",
+    CELERY_DEFAULT_ROUTING_KEY = "myapp",
+)
+
+
 
 """ The task decorator will share tasks between apps by default """
 @app.task(bind=True)
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
+@app.task
+def send_notification():
+    print('Hello How are you')
 
+    app.conf.beat_schedule = {
+        "see-you-in-ten-seconds-task": {
+            "task": "periodic.send_notification",
+            "schedule": 20.0
+        }
+    }

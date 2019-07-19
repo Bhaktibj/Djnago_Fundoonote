@@ -42,6 +42,21 @@ class BotoService:
             return None
         return response[ 'Contents' ]
 
+    def delete_object(self,bucket_name, object_name):
+        """Delete an object from an S3 bucket
+        :param bucket_name: string
+        :param object_name: string
+        :return: True if the referenced object was deleted, otherwise False
+        """
+
+        # Delete the object
+        s3 = boto3.client('s3')
+        try:
+            s3.delete_object(Bucket=bucket_name, Key=object_name)
+        except ClientError as e:
+            logging.error(e)
+            return False
+        return True
 # *************************************************************************************
 
 

@@ -1,24 +1,24 @@
 
 import redis
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
+redis_obj = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
 
-class redis_methods:
+class RedisMethods:
     """This class is used to set , get , length from Redis cache"""
 
     def set_value(self, key, value,): # this method used to set value in redis cache
-        r.set(key, value)
+        redis_obj.set(key, value)
         print('token set')
 
     def get_value(self, key): # this method is used to get the value from cache
-        token = r.get(key)
+        token = redis_obj.get(key)
         return token
 
     def length_str(self,key): # this method is used to find the length of string
-        token_len = r.strlen(key)
+        token_len = redis_obj.strlen(key)
         return token_len
 
     def flush(self):
-        r.flushall()
-print("Redis:",redis_methods.__doc__)
+        redis_obj.flushall()
+print("Redis:",RedisMethods.__doc__)

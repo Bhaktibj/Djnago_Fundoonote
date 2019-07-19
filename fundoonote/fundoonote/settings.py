@@ -15,7 +15,6 @@ import os
 import environ
 from decouple import config
 import logging
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
@@ -33,9 +32,11 @@ logging.basicConfig(format='%(process)d-%(levelname)s-%(message)s',level=logging
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
+# SECRET_KEY = 'op--q*tjp&z4%0u0=jw%ac2ds=7l4-xq8f650bfd1u&==1e7&t'
 DEBUG = config('DEBUG', default=False, cast=bool)
 TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
     'django.contrib.sites', # django site domain
     'django_elasticsearch_dsl',  # ElasticSearch DSL is a high level library which is use to writing the qu
     'django_elasticsearch_dsl_drf',
+    'django_celery_beat',
 ]
 
 NOTIFICATIONS_USE_JSONFIELD=True
@@ -94,7 +96,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',# JWT Token
         'rest_framework.authentication.SessionAuthentication',
     ),
-    # 'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
+     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
 
@@ -207,7 +209,6 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587                    #DEFAULT_FROM_EMAIL = 'TestSite Team <bhaktibj402@gmail.com>'
 EMAIL_USE_SSL = True
-
 """ Configuring the authentication classes """
 AUTHENTICATION_BACKENDS = [
         'social_core.backends.linkedin.LinkedinOAuth2',

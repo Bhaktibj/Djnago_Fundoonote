@@ -4,7 +4,7 @@ from locust import HttpLocust, TaskSet, task
 
 class UserUrlActions(TaskSet):
 
-    def on_start(self):
+    def on_start(self):  # start load testing
         self.login()
 
     def login(self):
