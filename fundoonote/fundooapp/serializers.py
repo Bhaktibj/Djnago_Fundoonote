@@ -4,6 +4,7 @@ from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
 from rest_framework import serializers  # import the serializer
 from .models import Notes, Label, AWSModel
 from .documents import NotesDocument
+
 VALIDATE_ALPHANUMERIC = RegexValidator(r'^ap-[a-z]*-[1]{1}$', 'Please follow the region format.')
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -61,7 +62,7 @@ print("NotesDocumentSerializer:", NotesDocumentSerializer.__doc__)
 
 class AWSModelSerializer(serializers.ModelSerializer):
     """ This Serializer is used to create and delete  bucket"""
-    bucket_name = serializers.CharField(max_length=30)
+    bucket_name = serializers.CharField(max_length=30) # bucket_name
     region = serializers.CharField(max_length=100, validators=[VALIDATE_ALPHANUMERIC])
     class Meta:
         model = AWSModel

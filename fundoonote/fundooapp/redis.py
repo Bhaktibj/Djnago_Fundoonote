@@ -1,8 +1,5 @@
-
 import redis
 redis_obj = redis.StrictRedis(host='localhost', port=6379, db=0)
-
-
 
 class RedisMethods:
     """This class is used to set , get , length from Redis cache"""

@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
-
 import os
 import environ
 from decouple import config
@@ -64,9 +63,9 @@ INSTALLED_APPS = [
     'django_elasticsearch_dsl',  # ElasticSearch DSL is a high level library which is use to writing the qu
     'django_elasticsearch_dsl_drf',
     'django_celery_beat',
+'django_email_queue.apps.DjangoEmailQueueConfig'
 ]
-
-NOTIFICATIONS_USE_JSONFIELD=True
+SITE =2
 env = environ.Env(
     SECRET_KEY=str,
     DEBUG=(bool, False),
@@ -77,15 +76,6 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 ACCOUNT_EMAIL_VERIFICATION = 'None'
 ACCOUNT_EMAIL_REQUIRED = True
-SITE_ID = 2
-
-""" Celery Settings"""
-# BROKER_URL = 'redis://localhost:6379'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-# CELERY_ACCEPT_CONTENT = ['application/json']
-# CELERY_TASK_SERIALIZER = 'json'
-# CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_TIMEZONE = 'Asia/Shanghai'
 
 REST_FRAMEWORK = {
 # 'DEFAULT_PERMISSION_CLASSES': (
@@ -136,11 +126,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'fundoonote.wsgi.application'
 
+EMAIL_BACKEND = 'django_email_queue.backends.EmailBackend'
+EMAIL_QUEUE_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.dirname(PROJECT_DIR)
-
-# Environment Variable
 
 
 """ Redis cache """
@@ -207,7 +195,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = 587                    #DEFAULT_FROM_EMAIL = 'TestSite Team <bhaktibj402@gmail.com>'
+EMAIL_PORT = 587
 EMAIL_USE_SSL = True
 """ Configuring the authentication classes """
 AUTHENTICATION_BACKENDS = [
@@ -217,7 +205,6 @@ AUTHENTICATION_BACKENDS = [
         'social_core.backends.github.GithubOAuth2',
 
 ]
-
 
 """ The LOGIN_REDIRECT_URL will be used to redirect the 
 user after authenticating from Django Login and Social Auth."""
@@ -242,15 +229,3 @@ SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
 SOCIAL_AUTH_GITHUB_KEY = config('SOCIAL_AUTH_GITHUB_KEY')
 SOCIAL_AUTH_GITHUB_SECRET = config('SOCIAL_AUTH_GITHUB_SECRET')
 
-""" AWS S3 Settings"""
-AWS_STORAGE_BUCKET_NAME = 'django-s3-assets1' # AWS Bucket Name
-AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',
-}
-AWS_LOCATION = 'static'
-AWS_DEFAULT_ACL = 'private'
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'fundooapp/static'),
-]

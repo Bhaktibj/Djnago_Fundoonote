@@ -12,8 +12,6 @@ from rest_framework_swagger.views import get_swagger_view
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet) # register the view_set to display the all users
 router.register(r'Search/elastic_search',views.NotesDocumentViewSet,basename='elastic_search')
-# router.register(r'label', views.LabelViewSet, basename='label')
-# router.register(r'notes', views.NotesViewSet, basename='notes')
 schema_view = get_schema_view(title='Pastebin API')
 urlpatterns = [
     url('^schema/', schema_view),
@@ -31,7 +29,6 @@ urlpatterns = [
     url(r'^swagger/$', get_swagger_view(title='API Docs'), name='api_docs'), # swagger
     url(r'^api/', include_docs_urls(title='Notes API'), name='api'), # CoreApi
     url(r'^',include('django.contrib.auth.urls')),
-    url(r'^', include('drf_autodocs.urls')),
 
 
 ]

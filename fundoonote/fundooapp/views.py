@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.shortcuts import render
@@ -72,11 +73,10 @@ def register(request):      # this method is used to signup the user
             user = user_form.save()
             user.set_password(user.password)
             user.save()
-            #current_site = get_current_site(request)
             mail_subject = 'Activate your blog account.'
             message = render_to_string('fundooapp/acc_active_email.html', {
                 'user': user,
-                'domain': '127.0.0.1:8000',
+                'domain': 'localhost:8000',
                 # takes user id and generates the base64 code(uidb64)
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
                 # Here we receive uidb64, token. By using the "urlsafe_base64_decode"
@@ -97,10 +97,9 @@ def register(request):      # this method is used to signup the user
 
     return render(request, 'fundooapp/registration.html', {'user_form': user_form})
 
-"""this method is used to login the user"""
 @csrf_exempt
 def user_login(request):
-    # if this is a POST request we need to process the form data
+    # this is a POST request we need to process the form data
     if request.method == 'POST':
         try:
             response = {
@@ -112,10 +111,6 @@ def user_login(request):
             password = request.POST.get('password')
             if username is None and password is None:
                 raise Exception('Username and password is required')
-            if username is None:
-                raise Exception('Username is required')
-            if password is None:
-                raise Exception('Password is required')
             # authentication of user name and password
             user = authenticate(username=username, password=password)
             if user:
@@ -164,7 +159,6 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.save()
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        # return redirect('home')
         return HttpResponse('Thank you for your email confirmation. '
                             'Now you can login your account.')
     else:
@@ -172,7 +166,7 @@ def activate(request, uidb64, token):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """This Class is used to Display the user list"""
+    """This Class is used to create the user Api Endpoints"""
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserDetailSerializer
 print("UserViewSet:", UserViewSet.__doc__)
@@ -204,10 +198,9 @@ class RestUserRegister(CreateAPIView):
                 user = User.objects.create_user(username=username, email=email, password=password)
                 user.is_active = False
                 user.save()
-                    #current_site = get_current_site(request)
                 message = render_to_string('fundooapp/acc_active_email.html', {
                     'user': user,
-                    'domain': '127.0.0.1:8000',
+                    'domain': 'localhost:8000',
                     # takes user id and generates the base64 code(uidb64)
                     'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
                     # Here we receive uidb64, token. By using the "urlsafe_base64_decode"
@@ -303,6 +296,7 @@ print("LoginView:", Login.__doc__)
 
 #***********************Curd Operation on Notes*****************************************
 class CreateNotes(CreateAPIView):
+
     """This class View is used Create the Note using Post method"""
     serializer_class = NotesSerializer
 
@@ -347,10 +341,10 @@ class CreateNotes(CreateAPIView):
                             )
                         res['mail_data'] = "Sent the mail successfully"# get serialize data
                     log.info("Return the response")
-                return Response(res, status=status.HTTP_201_CREATED) # created status_code 201
+                return Response(res, status=200) # created status_code 201
         except:
             log.error("Return the error")
-            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+            return Response(res, status=400)
 print("CreateNotes:", CreateNotes.__doc__)
 
 #*******************************List of  the Notes ****************************************
@@ -415,6 +409,7 @@ class NotesDetail(APIView):
             return Response(res, status=404)
 print("NotesDetail:", NotesDetail.__doc__)
 #***********************************Delete the note************************************
+
 class NotesDelete(APIView):
     """ This class is used to Delete the Note"""
     @method_decorator(app_pk_login_required)
@@ -471,7 +466,9 @@ class NotesUpdate(APIView):
             log.error("Note is not found")
             return Response(res, status=404)
 print("NotesUpdate:", NotesUpdate.__doc__)
+
 # **********************************Trash the note***********************************
+
 class TrashView(APIView):
     """ Trash the Note"""
     @method_decorator(app_pk_login_required)
@@ -497,6 +494,7 @@ class TrashView(APIView):
 print("TrashNotes:", TrashView.__doc__)
 
 # ***************************************Archive the notes*******************************
+
 class ArchiveNotes(APIView):
     """ Archive The Note"""
     @method_decorator(app_pk_login_required)
@@ -528,8 +526,7 @@ class ArchiveNotes(APIView):
             return Response(res, status=404)
 print("ArchiveNotes:", ArchiveNotes.__doc__)
 #**************************************set reminder to note*****************************
-import pika
-import sys
+
 class ReminderNotes(APIView):
     """ set Reminder for Note The Note"""
     @method_decorator(app_pk_login_required)
@@ -564,6 +561,7 @@ class ReminderNotes(APIView):
         except:
             return Response(res, status=404) # return the not found response
 print("ReminderNotes:", ReminderNotes.__doc__)
+
 # *****************************Curd Operations on label*******************************"""
 
 class CreateLabel(CreateAPIView):
@@ -587,13 +585,15 @@ class CreateLabel(CreateAPIView):
                 res['success'] = True
                 res['data'] = serializer.data
                 log.info("return the response")
-            return Response(res, status=status.HTTP_201_CREATED) # return accept response
+            return Response(res, status=200) # return accept response
         except:
             log.info("enter the except block")
             log.error("label is not created")
-            return Response(res, status=status.HTTP_400_BAD_REQUEST) # return bad response
+            return Response(res, status=400) # return bad response
 print("CreateLabel:", CreateLabel.__doc__)
+
 # *********************************list the label**************************************
+
 class LabelList(APIView):
     """ Display the List of labels"""
     @method_decorator(app_login_required)
@@ -627,6 +627,7 @@ class LabelList(APIView):
 print("LabelList:", LabelList.__doc__)
 
 #*******************************Update and detail the note******************************
+
 class LabelUpdateDetail(APIView):
     """ Display the detail of label and Updated """
     serializer_class = LabelSerializer
@@ -737,7 +738,7 @@ class LabelListPage(ListCreateAPIView):
     pagination_class = CustomPagination # Use the CustomPagination class her
     queryset = Label.objects.all()
 
-#***************************************Getting label from Notes**********************************
+#***************************************Display label from Notes**********************************
 class LabelFromNotes(APIView):
     """ This view is used to show the label detail from Notes """
     @method_decorator(app_pk_login_required)
@@ -781,7 +782,7 @@ class LabelFromNotes(APIView):
 
 
 # ***************************************S3 AWS Implementation*************************************
-class create_aws_bucket(CreateAPIView):
+class CreateBucket(CreateAPIView):
     """ create bucket using boto3 services method"""
     serializer_class = AWSModelSerializer
     # Assign these values before running the program
@@ -813,7 +814,7 @@ class create_aws_bucket(CreateAPIView):
 
 
 #**********************************get object from aws bucket*******************************
-class get_bucket_object(APIView):
+class GetBucketObject(APIView):
     """ Delete bucket using boto3 service from rest api"""
     @method_decorator(app_pk_login_required) # app login required
     def get(self, request, pk):
@@ -849,7 +850,7 @@ class get_bucket_object(APIView):
 
 
 #*********************************Delete Buckets*******************************************
-class delete_aws_bucket(APIView):
+class DeleteBucket(APIView):
     """ Delete bucket using boto3 service from rest api"""
     @method_decorator(app_pk_login_required) # app login required
     def delete(self, request, pk):
@@ -889,10 +890,10 @@ class delete_aws_bucket(APIView):
             return Response(res, status=200)  # return the response
         except:
             log.error("Invalid function")  # Return the bad response
-            return Response(res)
+            return Response(res, status=404)
 
 #**************************************List of the Buckets*****************************************
-class Bucket_List(APIView):
+class BucketList(APIView):
     """display all the buckets in Rest API"""
     @method_decorator(app_login_required) # app login required
     def get(self, request):
@@ -904,7 +905,7 @@ class Bucket_List(APIView):
             log.info("Serialize the object")
             data = AWSModelSerializer(bucket, many=True).data  # serialize the objects
             log.info("Return the response")
-            return Response(data) # return Response
+            return Response(data)
         except:
             log.error("Empty list")
             return Response("invalid or empty")

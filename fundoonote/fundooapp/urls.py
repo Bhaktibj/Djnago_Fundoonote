@@ -12,8 +12,6 @@ urlpatterns = [
     url(r'user_login/', views.user_login, name='login'),
     url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
     views.activate, name='activate'),# url activate the user registration
-
-    # list of Notes URL
     path(r'Notes/List/', views.NotesList.as_view(), name="note_list"),
     path(r'Notes/Detail/<int:pk>/', views.NotesDetail.as_view(), name="note_detail"),
     path(r'Notes/Create/', views.CreateNotes.as_view(), name="note_create"),
@@ -25,31 +23,23 @@ urlpatterns = [
     path(r'Notes/Reminder/<int:pk>/', views.ReminderNotes.as_view(), name='note_reminder'),
     path(r'Notes/TrashList/', views.TrashList.as_view(), name='trash_list'),
     path(r'Notes/Pagination/', views.NotesListPage.as_view(), name="note_page"),
-
-    # List of label URL
     path(r'Label/List/', views.LabelList.as_view(), name="label_list"),
     path(r'Label/Detail/<int:pk>/', views.LabelUpdateDetail.as_view(), name="label_detail"),
     path(r'Label/Create/', views.CreateLabel.as_view(), name="label_create"),
     path(r'Label/Delete/<int:pk>/', views.LabelDelete.as_view(), name='delete_label'),
     path(r'Label/Pagination/',views.LabelListPage.as_view(), name="label_page"),
-    path(r'note_label/<int:pk>/', views.LabelFromNotes.as_view(), name="label_page"),
-
-    # List of the AWS bucket url
-    path(r'aws/create/', views.create_aws_bucket.as_view(), name='create_bucket'),
-    path(r'aws/delete/<int:pk>/', views.delete_aws_bucket.as_view(), name='delete_bucket'),
-    path(r'aws/List/', views.Bucket_List.as_view(), name="bucket_list"),
+    path(r'Label/get_label_note/<int:pk>/', views.LabelFromNotes.as_view(), name="label_page"),
+    path(r'aws/create/', views.CreateBucket.as_view(), name='create_bucket'),
+    path(r'aws/delete/<int:pk>/', views.DeleteBucket.as_view(), name='delete_bucket'),
+    path(r'aws/List/', views.BucketList.as_view(), name="bucket_list"),
     path(r'aws/upload_s3/<int:pk>/', views.s3_upload, name='upload_image'),
-    path(r'aws/object/<int:pk>/', views.get_bucket_object.as_view(), name='get_object'),
-
-
-    # search operations url
+    path(r'aws/object/<int:pk>/', views.GetBucketObject.as_view(), name='get_object'),
     path(r'Search/user/', views.UserListView.as_view(), name="user"),
     path(r'Search/notes/',views.NotesListView.as_view(), name="note"),
     path(r'search/', views.search, name='search'),
-
-    path(r'Rest-auth/', include('rest_auth.urls')),
-    path(r'Rest-auth/',ConfirmEmailView.as_view(),name="view"),
-    path(r'RestUsers/register/', views.RestUserRegister.as_view(), name='rest_register'),
-    path(r'RestUsers/login/', views.Login.as_view(), name='rest_login'),
+    path(r'rest-auth/', include('rest_auth.urls')),
+    path(r'rest-auth/',ConfirmEmailView.as_view(),name="view"),
+    path(r'rest_api/register/', views.RestUserRegister.as_view(), name='rest_register'),
+    path(r'rest_api/login/', views.Login.as_view(), name='rest_login'),
 ]
 

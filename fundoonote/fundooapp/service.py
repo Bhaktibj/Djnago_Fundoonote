@@ -22,8 +22,7 @@ class BotoService:
         """ This method is used to create the AWS bucket"""
         # Delete the bucket
         try:
-            s3 = boto3.client('s3')
-            s3.delete_bucket(Bucket=bucket_name) # bucket_name: string
+            self.s3.delete_bucket(Bucket=bucket_name) # bucket_name: string
         except ClientError as e:
             logging.error(e)
             return False  #True if the referenced bucket was deleted, otherwise False
@@ -33,9 +32,8 @@ class BotoService:
         """List the objects in an Amazon S3 bucket
         """
         # Retrieve the list of bucket objects
-        s3 = boto3.client('s3')
         try:
-            response = s3.list_objects_v2(Bucket=bucket_name)
+            response = self.s3.list_objects_v2(Bucket=bucket_name)
         except ClientError as e:
             # AllAccessDisabled error == bucket not found
             logging.error(e)
@@ -44,19 +42,14 @@ class BotoService:
 
     def delete_object(self,bucket_name, object_name):
         """Delete an object from an S3 bucket
-        :param bucket_name: string
-        :param object_name: string
-        :return: True if the referenced object was deleted, otherwise False
         """
-
         # Delete the object
-        s3 = boto3.client('s3')
         try:
-            s3.delete_object(Bucket=bucket_name, Key=object_name)
+            self.s3.delete_object(Bucket=bucket_name, Key=object_name)
         except ClientError as e:
             logging.error(e)
             return False
         return True
-# *************************************************************************************
+# **********************************************************************************************
 
 

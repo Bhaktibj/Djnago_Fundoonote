@@ -2,7 +2,6 @@ import jwt
 from django.contrib.auth.models import User
 from .redis import RedisMethods
 OBJECT = RedisMethods()
-
 def app_login_required(function):
     """ This method is give the authorization to another method"""
     def token_verification(varg):

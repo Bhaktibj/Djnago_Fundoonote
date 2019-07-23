@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-
 """Manage.py File is like Utility of the project"""
-
 import os
 import sys
-
 if __name__ == '__main__':
 
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fundoonote.settings')

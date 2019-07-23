@@ -1,18 +1,15 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.mail import send_mail
 from django.db import models
 from django.contrib.auth.models import User  # import USER model
 from django.core.validators import RegexValidator   # import regex validator
 from django.db.models.signals import post_save
-from rest_framework import request
 
-VALIDATE_ALPHANUMERIC = RegexValidator(r'^[a-zA-Z0-9]*$', 'Only alphanumeric characters',
-                                       'are allowed.')
+VALIDATE_ALPHANUMERIC = RegexValidator(r'^[a-zA-Z0-9]*$', 'Only alphanumeric characters',                                       'are allowed.')
 VALIDATE_ALPHABETIC = RegexValidator(r'^[a-zA-Z]', 'Only Alphabetical Characters are allowed.')
 VALIDATE_AWS_REGION = RegexValidator(r'^ap-[a-z]*-[1]{1}$', 'Please follow the region format.')
 
-
+# this is content type model
 class ContentModel(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -20,15 +17,15 @@ class ContentModel(models.Model):
     pub_date = models.DateTimeField()
     class Meta:
         ordering = ['-pub_date']
+
     def __str__(self):
+
         return "{0} - {1}".format(self.content_object.text,
                                   self.pub_date.date())
-
-
-def create_notes(sender, instance, created, **kwargs):
+def create_label(sender, instance, created, **kwargs):
     """
-    Post save handler to create/update car instances when
-    Bmw or Tesla is created/updated
+    Post save handler to create/update label instances when
+     Label is created/updated
     """
     content_type = ContentType.objects.get_for_model(instance)
     try:
@@ -40,15 +37,6 @@ def create_notes(sender, instance, created, **kwargs):
     note.text = instance.text
     note.created_By = instance.created_By
     note.save()
-    if note.save:
-        send_mail(  # user then send the mail
-            'Sending Note to the user',
-             "user add this note",
-             'admin105@gmail.com',
-             ['admin104@gmail.com' ],
-            fail_silently=False,
-        )
-
 
 class Label(models.Model):
     """ This model is used to creating the label"""
@@ -61,8 +49,7 @@ class Label(models.Model):
     def __str__(self):
         return  self.text
 print("Label:", Label.__doc__) # print docstring on terminal
-post_save.connect(create_notes, sender=Label)
-
+post_save.connect(create_label, sender=Label)
 
 class Notes(models.Model):
     """ This model is used to creating the note"""
@@ -92,7 +79,6 @@ class Notes(models.Model):
 
     def __str__(self):
         return "{0} - {1}".format(self.title, self.pub_date)
-
 print("Notes:", Notes.__doc__) # print docstring on terminal
 
 class AWSModel(models.Model):
@@ -104,4 +90,3 @@ class AWSModel(models.Model):
     def __str__(self):           # print bucket name in string format
         return self.bucket_name
 print("AWSModel:", AWSModel.__doc__) # print docstring on terminal
- 
