@@ -2,121 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9a96f06c-8375-4d85-984a-c5e3a760ef27" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/fundoonote/.env" beforeDir="false" afterPath="$PROJECT_DIR$/fundoonote/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/fundoonote/Users/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/migrations/0002_notes_image.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/migrations/0003_auto_20190611_0455.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/migrations/0004_auto_20190611_0531.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/migrations/0005_auto_20190611_0600.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/migrations/0006_notes_image.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/migrations/0007_remove_notes_image.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/migrations/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/fundoonote/Users/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/static/loginapp/js/materialize.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/static/loginapp/js/materialize.min.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/templates/Users/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/fundoonote/Users/templates/Users/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/templates/Users/labels_form.html" beforeDir="false" afterPath="$PROJECT_DIR$/fundoonote/Users/templates/Users/labels_form.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/templates/Users/labels_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/fundoonote/Users/templates/Users/labels_list.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/templates/loginapp/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/fundoonote/Users/templates/loginapp/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/Users/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/fundoonote/Users/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/fundoonote/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/fundoonote/fundoonote/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/CHANGELOG.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/Gruntfile.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/LICENSE" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/dist/css/materialize.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/dist/css/materialize.min.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/dist/js/materialize.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/dist/js/materialize.min.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/extras/noUiSlider/nouislider.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/extras/noUiSlider/nouislider.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/extras/noUiSlider/nouislider.min.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/anime.min.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/autocomplete.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/buttons.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/cards.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/carousel.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/cash.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/characterCounter.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/chips.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/collapsible.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/component.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/datepicker.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/dropdown.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/forms.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/global.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/materialbox.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/modal.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/parallax.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/pushpin.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/range.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/scrollspy.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/select.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/sidenav.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/slider.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/tabs.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/tapTarget.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/timepicker.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/toasts.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/tooltip.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/js/waves.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/package.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_badges.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_buttons.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_cards.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_carousel.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_chips.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_collapsible.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_color-classes.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_color-variables.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_datepicker.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_dropdown.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_global.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_grid.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_icons-material-design.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_materialbox.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_modal.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_navbar.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_normalize.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_preloader.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_pulse.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_sidenav.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_slider.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_table_of_contents.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_tabs.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_tapTarget.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_timepicker.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_toast.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_tooltip.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_transitions.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_typography.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_variables.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/_waves.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/forms/_checkboxes.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/forms/_file-input.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/forms/_forms.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/forms/_input-fields.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/forms/_radio-buttons.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/forms/_range.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/forms/_select.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/components/forms/_switches.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundoonote/node_modules/materialize-css/sass/materialize.scss" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FileEditorManager">
-    <leaf>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/fundoonote/fundoonote/__init__.py">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-    </leaf>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -131,22 +23,9 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="75" />
-    <option name="y" value="34" />
-    <option name="width" value="1299" />
-    <option name="height" value="692" />
-  </component>
-  <component name="ProjectView">
-    <navigator proportions="" version="1">
-      <foldersAlwaysOnTop value="true" />
-    </navigator>
-    <panes>
-      <pane id="ProjectPane" />
-      <pane id="Scope" />
-    </panes>
-  </component>
+  <component name="ProjectId" id="1OUb0ck1MkCR50hzZAFsVb8r9Du" />
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/.." />
   </component>
   <component name="RunDashboard">
@@ -161,6 +40,9 @@
       </list>
     </option>
   </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="9a96f06c-8375-4d85-984a-c5e3a760ef27" name="Default Changelist" comment="" />
@@ -171,31 +53,15 @@
     </task>
     <servers />
   </component>
-  <component name="ToolWindowManager">
-    <frame x="65" y="-4" width="1301" height="772" extended-state="6" />
-    <layout>
-      <window_info id="Favorites" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24960877" />
-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Version Control" />
-      <window_info anchor="bottom" id="Python Console" />
-      <window_info anchor="bottom" id="Terminal" visible="true" weight="0.32884902" />
-      <window_info anchor="bottom" id="Event Log" side_tool="true" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-    </layout>
-  </component>
-  <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/fundoonote/fundoonote/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
