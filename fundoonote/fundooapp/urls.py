@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
     views.activate, name='activate'),# url activate the user registration
     path(r'Notes/List/', views.NotesList.as_view(), name="note_list"),
+    path(r'Notes/UserList/', views.NotesListUser.as_view(), name='note_list_user'),
     path(r'Notes/Detail/<int:pk>/', views.NotesDetail.as_view(), name="note_detail"),
     path(r'Notes/Create/', views.CreateNotes.as_view(), name="note_create"),
     path(r'Notes/Delete/<int:pk>/', views.NotesDelete.as_view(),name='note_delete'),

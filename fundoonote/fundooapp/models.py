@@ -67,7 +67,7 @@ class Notes(models.Model):
     # color choice
     COLOR_CHOICES = (
         ('Red', 'Red'),
-        ('Ged', 'Green'),
+        ('Green', 'Green'),
         ('Blue', 'Blue'),
     )
     color = models.CharField(default='Green', max_length=50, blank=True,

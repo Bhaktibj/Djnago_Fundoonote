@@ -47,7 +47,6 @@ class LabelSerializer(serializers.ModelSerializer):
         fields = '__all__'
 print("LabelSerializer:", LabelSerializer.__doc__)
 
-
 class NotesDocumentSerializer(DocumentSerializer):
     """ NotesDocument Serializer is serialize the NotesDocument data fields"""
     title = serializers.CharField(read_only=True)

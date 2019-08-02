@@ -1,5 +1,4 @@
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.shortcuts import render
@@ -94,7 +93,6 @@ def register(request):      # this method is used to signup the user
 
     else:
         user_form = UserForm()
-
     return render(request, 'fundooapp/registration.html', {'user_form': user_form})
 
 @csrf_exempt
@@ -296,55 +294,55 @@ print("LoginView:", Login.__doc__)
 
 #***********************Curd Operation on Notes*****************************************
 class CreateNotes(CreateAPIView):
-
     """This class View is used Create the Note using Post method"""
     serializer_class = NotesSerializer
-
     @method_decorator(app_login_required)
     def post(self, request, *args, **kwargs):
-        res = {'message':"Something bad happened",
-               'data':{},
-               'mail_data':'Mail is not sent',
-               'success': False}
+        res = {'messages':"Something bad happened",
+               'success': False,
+               'data': {},
+               }
         try:
             print("***************************************************************")
             log.info("Enter the Try block") # try block
             log.info("Request the data")
             note = request.data         # request the user data
             print(note)
-            if note is None:
-                return Response("None data")
-            else:
-                #Create an Notes from the above data
-                log.info("serialize the data")
-                serializer = NotesSerializer(data=note) # serialize the data
-                log.info("validation of serializer")
-                if serializer.is_valid(raise_exception=True): # check the serializer is valid or not
-                    log.info("save the serializer")
-                    serializer.save()  # save serializers
-                    res['message'] = "Successfully created note"
-                    res['success'] = True
-                    res['data'] = serializer.data
-                    log.info("dumps the json data into string")
-                    note_data = json.dumps(res) # convert the json data into string format
-                    log.info("taking the collaborator field")
-                    # take the collaborator list
-                    for collaborate_id in serializer.data['collaborator']:
-                        user = User.objects.get(id=collaborate_id) # take the user
-                        if user:
-                            send_mail(          # user then send the mail
-                                'Sending Note to the user',
-                                note_data,
-                                request.user.email,
-                                [str(user.email)],
-                                fail_silently=False,
-                            )
-                        res['mail_data'] = "Sent the mail successfully"# get serialize data
-                    log.info("Return the response")
-                return Response(res, status=200) # created status_code 201
+            log.info("serialize the data")
+            serializer = NotesSerializer(data=note) # serialize the data
+            log.info("validation of serializer")
+            if serializer.is_valid(raise_exception=True): # check the serializer is valid or not
+                print(serializer.is_valid())
+                token_val = redis_obj.get_value('token_key')
+                decoded_token = jwt.decode(token_val, 'Cypher', algorithms=[ 'HS256' ])
+                # decoded token with redis cache
+                decoded_id = decoded_token.get('username')
+                print("decoded_id", decoded_id)
+                # validate the decoded id with user_id
+                user = User.objects.get(username=decoded_id)
+                serializer.save(created_By=user)  # save serializers with current user
+                res['messages'] = "Successfully created note"
+                res['success'] = True
+                res['data'] = serializer.data
+                log.info("dumps the json data into string")
+                note_data = json.dumps(res) # convert the json data into string format
+                log.info("taking the collaborator field")
+                # take the collaborator list
+                for collaborate_id in serializer.data['collaborator']:
+                    user = User.objects.get(id=collaborate_id) # take the user
+                    if user:
+                        send_mail(       # user then send the mail
+                            subject='Sending Note to the user',
+                            message=note_data,
+                            from_email=request.user.email,
+                            recipient_list=[user.email],
+                            fail_silently=False,
+                        )
+                log.info("Return the response")
+                return Response(res, status=201) # created status_code 201
         except:
             log.error("Return the error")
-            return Response(res, status=400)
+            return Response(res, status=400) # bad request status_code 400
 print("CreateNotes:", CreateNotes.__doc__)
 
 #*******************************List of  the Notes ****************************************
@@ -372,9 +370,43 @@ class NotesList(APIView):
             return Response(res, status=404) #if try block is False
 print("NoteList:", NotesList.__doc__)
 
+# *************************************Retrieve the Current User Notes********************
+class NotesListUser(APIView):
+    """This class is used to Display the Current Login User Notes"""
+
+    # noinspection PyBroadException
+    @method_decorator(app_login_required)
+    def get(self, request):
+        res = {'message': "Something bad happened",
+               'data':{},
+               'success': False
+              }
+        try:
+            print("***************************************************************")
+            token_val = redis_obj.get_value('token_key') # get token from cache
+            decoded_token = jwt.decode(token_val, 'Cypher', algorithms=[ 'HS256' ])
+            # decoded token with redis cache
+            decoded_id = decoded_token.get('username') # get decoded _id
+            print("decoded_id", decoded_id)
+            # validate the decoded id with user_id
+            user = User.objects.get(username=decoded_id)
+            log.info("select the object")
+            notes = Notes.objects.filter(created_By=user) # filter the all object
+            log.info("serialize the object")
+            data = NotesSerializer(notes, many=True).data # serialize the data
+            res['message'] = "Successfully display the note"
+            res['success'] = True
+            res['data'] = data
+            log.info("List of the Notes")
+            return Response(res, status=200) # return the data
+        except:
+            log.error("Empty List")
+            return Response(res, status=404) #if try block is False
+print("NoteList:", NotesListUser.__doc__)
+
 #*******************************Display the specific note********************************
 class NotesDetail(APIView):
-    """ Display the details of list and store data into redis cache"""
+    """ Display the specific Note detail and store data into redis cache"""
     @method_decorator(app_pk_login_required)
     def get(self, request, pk):
         res = {'message': "Something bad happened",
@@ -383,6 +415,7 @@ class NotesDetail(APIView):
               }
         try:
             print("***************************************************************")
+
             log.info("select the object")
             note = get_object_or_404(Notes, id=pk)
             log.info("check the note.pin is true or what")
@@ -390,9 +423,9 @@ class NotesDetail(APIView):
                 log.info("serialize the data")
                 data = NotesSerializer(note).data
                 dict_data = pickle.dumps(data)  # dump the file
-                redis_obj.set_value('dict', dict_data) # stored the value into key
+                redis_obj.set_value('note'+str(pk), dict_data) # stored the value into key
                 print("set data")
-                read_dict = redis_obj.get_value('dict')  # read the value
+                read_dict = pickle.loads(redis_obj.get_value('note'+str(pk)))  # read the value
                 log.info("Store data into redis cache")
                 data1 = pickle.loads(read_dict)  # loads data disk into data1
                 print(data1)
@@ -412,6 +445,8 @@ print("NotesDetail:", NotesDetail.__doc__)
 
 class NotesDelete(APIView):
     """ This class is used to Delete the Note"""
+
+    # noinspection PyBroadException
     @method_decorator(app_pk_login_required)
     def delete(self, request, pk):
         res = {'message': "Something bad happened",
@@ -440,6 +475,7 @@ class NotesUpdate(APIView):
     """ API endpoint that allows users to be viewed or edited."""
     serializer_class = NotesSerializer
 
+    # noinspection PyBroadException
     @method_decorator(app_pk_login_required)
     def put(self, request, pk=None):
         res = {'message': "Something bad happened",
@@ -468,7 +504,6 @@ class NotesUpdate(APIView):
 print("NotesUpdate:", NotesUpdate.__doc__)
 
 # **********************************Trash the note***********************************
-
 class TrashView(APIView):
     """ Trash the Note"""
     @method_decorator(app_pk_login_required)
@@ -494,7 +529,6 @@ class TrashView(APIView):
 print("TrashNotes:", TrashView.__doc__)
 
 # ***************************************Archive the notes*******************************
-
 class ArchiveNotes(APIView):
     """ Archive The Note"""
     @method_decorator(app_pk_login_required)
@@ -545,19 +579,17 @@ class ReminderNotes(APIView):
                 user = User.objects.get(id=created_id)  # take the user
                 if user:
                     send_mail(
-                        "Sending Notification",
-                         "Reminder is set",
-                        request.user.email,
-                        [str(user.email)],
+                        subject="Sending Notification",
+                         message="Reminder is set",
+                        from_email=request.user.email,
+                        recipient_list=[user.email],
                         fail_silently=False
                     )
                     res['message'] = 'successfully sending message',
                     res['success'] = True
-                else:
-                    return Response("msg is not sent")
+                    return Response(res, status=200)  # return the Ok response
             else:
-                return Response("Already reminder is set") # if set
-            return Response(res, status=200)  # return the Ok response
+                return Response("Reminder is already set")
         except:
             return Response(res, status=404) # return the not found response
 print("ReminderNotes:", ReminderNotes.__doc__)
@@ -585,7 +617,7 @@ class CreateLabel(CreateAPIView):
                 res['success'] = True
                 res['data'] = serializer.data
                 log.info("return the response")
-            return Response(res, status=200) # return accept response
+            return Response(res, status=201) # return accept response
         except:
             log.info("enter the except block")
             log.error("label is not created")
@@ -627,7 +659,6 @@ class LabelList(APIView):
 print("LabelList:", LabelList.__doc__)
 
 #*******************************Update and detail the note******************************
-
 class LabelUpdateDetail(APIView):
     """ Display the detail of label and Updated """
     serializer_class = LabelSerializer
@@ -638,18 +669,18 @@ class LabelUpdateDetail(APIView):
                'success': False}
         try:
             print("***************************************************************")
+            pk_val = str(pk)
             log.info("Enter the try block")
             label = get_object_or_404(Label, pk=pk)
             log.info("Serialize the object")
             data = LabelSerializer(label).data
             """ Stored the data into redis cache"""
             dict_data = pickle.dumps(data)  # dump the data pickle into dictionary
-            redis_obj.set_value('dict', dict_data) # store the data into key value
+            redis_obj.set_value('label'+pk_val, dict_data) # store the data into key value
             print("set data")
-            read_dict = redis_obj.get_value('dict') # get the data from redis cache
+            read_dict = pickle.loads(redis_obj.get_value('label'+pk_val)) # get the data from redis cache
             log.info("Stored the data into redis cache")
-            pickle_data = pickle.loads(read_dict) # load the pickle
-            print(pickle_data)
+            print(read_dict)
             res['message'] = "Successfully display Label"
             res['success'] = True
             res['data'] = data

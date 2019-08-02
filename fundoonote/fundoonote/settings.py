@@ -63,9 +63,8 @@ INSTALLED_APPS = [
     'django_elasticsearch_dsl',  # ElasticSearch DSL is a high level library which is use to writing the qu
     'django_elasticsearch_dsl_drf',
     'django_celery_beat',
-'django_email_queue.apps.DjangoEmailQueueConfig'
 ]
-SITE =2
+SITE = 2
 env = environ.Env(
     SECRET_KEY=str,
     DEBUG=(bool, False),
@@ -78,9 +77,9 @@ ACCOUNT_EMAIL_VERIFICATION = 'None'
 ACCOUNT_EMAIL_REQUIRED = True
 
 REST_FRAMEWORK = {
-# 'DEFAULT_PERMISSION_CLASSES': (
-#          'rest_framework.permissions.IsAuthenticated',
-#      ),
+'DEFAULT_PERMISSION_CLASSES': (
+         'rest_framework.permissions.IsAuthenticated',
+     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication', #Token Authentication
         'rest_framework_simplejwt.authentication.JWTAuthentication',# JWT Token
@@ -125,11 +124,6 @@ TEMPLATES = [
     ]
 
 WSGI_APPLICATION = 'fundoonote.wsgi.application'
-
-EMAIL_BACKEND = 'django_email_queue.backends.EmailBackend'
-EMAIL_QUEUE_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-
 
 """ Redis cache """
 
@@ -188,15 +182,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
-
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 STATICFILES_DIRS = [STATIC_DIR]
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
-EMAIL_USE_SSL = True
+EMAIL_USE_SSL = False
 """ Configuring the authentication classes """
 AUTHENTICATION_BACKENDS = [
         'social_core.backends.linkedin.LinkedinOAuth2',
@@ -229,3 +222,10 @@ SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
 SOCIAL_AUTH_GITHUB_KEY = config('SOCIAL_AUTH_GITHUB_KEY')
 SOCIAL_AUTH_GITHUB_SECRET = config('SOCIAL_AUTH_GITHUB_SECRET')
 
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+# EMAIL_BACKEND = 'django_email_queue.backends.EmailBackend'
+# EMAIL_QUEUE_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# 'django_email_queue.apps.DjangoEmailQueueConfig'
