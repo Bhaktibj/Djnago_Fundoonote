@@ -1,4 +1,7 @@
 from __future__ import absolute_import, unicode_literals
+
+from celery.schedules import crontab
+from celery.task import periodic_task
 from self import self
 from .mailer import Mailer
 from .models import Notes, Label
@@ -19,7 +22,7 @@ def update_notes(notes_id, title,trash, deleted): # rename the title
     note.save()
     return note
 
-@shared_task
+@periodic_task(run_every=(crontab(minute='*/15')), name="update_label", ignore_result=True)
 def update_label(label_id, text):  # update label
     label = Label.objects.get(id=label_id) # verifying the label id
     label.text=text # update the text

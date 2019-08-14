@@ -2,8 +2,8 @@ from django_elasticsearch_dsl import DocType, Index, fields
 from elasticsearch_dsl.connections import connections
 from .index import note_index, html_strip
 from .models import Notes
-# connections.create_connection(hosts=['localhost'])
-# connections.get_connection().cluster.health()
+connections.create_connection(hosts=['localhost'])
+connections.get_connection().cluster.health()
 """cluster:A cluster is a collection of one or more nodes (servers), 
    that together holds your entire data.
 analyzer:The keyword analyzer is a “noop” analyzer that accepts whatever text, 

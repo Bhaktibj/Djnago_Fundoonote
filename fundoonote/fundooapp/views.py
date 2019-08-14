@@ -127,8 +127,6 @@ def user_login(request):
                     print("Display The Tokens using get_token()")
                     print(token_val)  # print the cache token
                     print("Display the length of Token")
-                    len_str = redis_obj.length_str("token_key")
-                    print(len_str)  # returns the length of token
                     login(request, user)
                     print(user.username)
                     return render(request, 'fundooapp/index.html', {}, response)
@@ -136,7 +134,7 @@ def user_login(request):
                     return HttpResponse("Your account was inactive.")
             else:
                 print("Someone tried to login and failed.")
-                print("They used username: {} and password: {}".format(username, password))
+                print("They used username: {} and password:{}".format(username, password))
                 return HttpResponse("Invalid login details given")
         except:
             return render(request, 'fundooapp/user_login.html', {})
@@ -612,11 +610,25 @@ class CreateLabel(CreateAPIView):
             serializer = LabelSerializer(data=data) # validate the request data
             log.info("check if serializer is valid or not")
             if serializer.is_valid(raise_exception=True): # if serializer is valid
-                serializer.save()                         # save serializer
+                token_val = redis_obj.get_value('token_key')
+                decoded_token = jwt.decode(token_val, 'Cypher', algorithms=[ 'HS256' ])
+                # decoded token with redis cache
+                decoded_id = decoded_token.get('username')
+                print("decoded_id", decoded_id)
+                # validate the decoded id with user_id
+                user = User.objects.get(username=decoded_id)
+                serializer.save(created_By=user)  # save serializers with current user name
                 res['message'] = "Successfully created Label"
                 res['success'] = True
-                res['data'] = serializer.data
-                log.info("return the response")
+                res['data'] = serializer.data # return the data
+                label_data = json.dumps(res['data']) # dump the redis data
+                label_id = serializer.data['id'] # getting the label_id
+                label_pk = str(label_id) # label_id converted into str format
+                print(label_id)
+                redis_obj.set_value('label'+label_pk,label_data) # stored the data into redis cache
+                redis_label=redis_obj.get_value('label'+label_pk) # getting the label from redis
+                print(redis_label)
+                log.info("return the response") # return accept response
             return Response(res, status=201) # return accept response
         except:
             log.info("enter the except block")
@@ -669,23 +681,30 @@ class LabelUpdateDetail(APIView):
                'success': False}
         try:
             print("***************************************************************")
-            pk_val = str(pk)
-            log.info("Enter the try block")
-            label = get_object_or_404(Label, pk=pk)
-            log.info("Serialize the object")
-            data = LabelSerializer(label).data
-            """ Stored the data into redis cache"""
-            dict_data = pickle.dumps(data)  # dump the data pickle into dictionary
-            redis_obj.set_value('label'+pk_val, dict_data) # store the data into key value
-            print("set data")
-            read_dict = pickle.loads(redis_obj.get_value('label'+pk_val)) # get the data from redis cache
-            log.info("Stored the data into redis cache")
-            print(read_dict)
-            res['message'] = "Successfully display Label"
-            res['success'] = True
-            res['data'] = data
-            log.info("Return the successfully Response")
-            return Response(res, status=200) # response in json format
+            # label = get_object_or_404(Label, pk=pk)
+            label_id = str(pk)
+            print(label_id)
+            data1 = redis_obj.get_value('label'+label_id)
+            print(data1)
+            if data1 is not None:
+                return Response(data1.encode('utf-8').strip())
+            else:
+                log.info("Enter the try block")
+                label = get_object_or_404(Label, pk=pk)
+                log.info("Serialize the object")
+                data = LabelSerializer(label).data
+                """ Stored the data into redis cache"""
+                dict_data = pickle.dumps(data)  # dump the data pickle into dictionary
+                redis_obj.set_value('label'+label_id, dict_data) # store the data into key value
+                print("set data")
+                read_dict = pickle.loads(redis_obj.get_value('label'+label_id)) # get the data from redis cache
+                log.info("Stored the data into redis cache")
+                print(read_dict)
+                res['message'] = "Successfully display Label"
+                res['success'] = True
+                res['data'] = data
+                log.info("Return the successfully Response")
+                return Response(res, status=200) # response in json format
         except:
             log.info("Enter the try block")
             log.error("label is not found")
@@ -819,8 +838,11 @@ class CreateBucket(CreateAPIView):
     # Assign these values before running the program
     @method_decorator(app_login_required)  # this decorator is used to first login
     def post(self, request, *args, **kwargs):
-        res = {"message": "something bad happened",
-               "success": False}
+        res = {
+            "success": False,
+            "message": "something bad happened",
+            "data":{}
+               }
         try:                              # enter try block
             print("***************************************************************")
             log.info("Enter the try block")
@@ -945,10 +967,9 @@ class BucketList(APIView):
 @csrf_exempt
 def s3_upload(request, pk):
     response = {
+        'success': False,
         'message':'Bad request or empty file can not be uploaded',
-        'success':False,
-        'status_code':400,
-        'bucket_name':''
+        'data':{}
     }
     try:
         print("***************************************************************")
@@ -973,10 +994,9 @@ def s3_upload(request, pk):
                 s3_client = boto3.client('s3')
                 log.info("upload the image")
                 s3_client.upload_fileobj(uploaded_file, bucket_name, Key=file_name)
-                response['message'] = "Image successfully uploaded"
-                response['status_code'] = 200
                 response['success'] = True
-                response['bucket_name'] = bucket_name
+                response['message'] = "Image successfully uploaded"
+                response['data'] = bucket_name
                 log.info("Return the Response ")
                 return JsonResponse(response)
         else:

@@ -59,7 +59,6 @@ Django==2.1.7
 django-allauth==0.39.1
 django-appconf==1.0.3
 django-celery-beat==1.5.0
-django-celery-email==2.0.2
 django-celery-results==1.1.2
 django-compressor==2.3
 django-cors-headers==2.5.3
@@ -67,7 +66,6 @@ django-crispy-forms==1.7.2
 django-developer-panel==0.1.2
 django-elasticsearch-dsl==0.5.1
 django-elasticsearch-dsl-drf==0.18
-django-email-queue==0.23.0
 django-environ==0.4.5
 django-extensions==2.1.6
 django-filter==2.1.0
